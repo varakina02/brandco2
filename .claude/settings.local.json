@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls -la \"C:/Users/Yana/Desktop/brandco-landing/assets/images/\" 2>/dev/null; echo \"---DOWNLOADS---\"; ls -la \"C:/Users/Yana/Downloads/\" 2>/dev/null | grep -iE \"bg|section|\\\\.png\" | head -30; echo \"---TOOLS---\"; which magick cwebp ffmpeg 2>/dev/null; echo \"done\")",
+      "Bash(python -c \"import PIL; print\\('Pillow', PIL.__version__\\)\")",
+      "Bash(py --version)",
+      "mcp__491d8e8d-4660-489d-a5f6-b3fe25ff03b8__get_metadata",
+      "mcp__491d8e8d-4660-489d-a5f6-b3fe25ff03b8__get_design_context",
+      "mcp__491d8e8d-4660-489d-a5f6-b3fe25ff03b8__download_assets",
+      "Bash(curl -sL -o sections-bg.png \"https://www.figma.com/api/mcp/asset/6c174072-e1b9-4f0c-b480-47d8212f359d\")",
+      "Bash(python -c \"from PIL import Image; im=Image.open\\('sections-bg.png'\\); print\\('size', im.size, 'mode', im.mode\\)\")",
+      "Bash(python -c ' *)",
+      "Bash(node --check js/script.js)"
+    ]
+  }
+}

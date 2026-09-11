@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BRANDCO® — Branding agency</title>
+  <meta name="description" content="Brandco — a branding agency building identities that sell, scale and stay." />
+
+  <!-- Fonts: PP Neue Montreal (display/headings) is self-hosted in css/variables.css.
+       IBM Plex Mono (nav / mission / ticker) + Inter (CTA + stat labels) via Google. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/styles.css" />
+
+  <!-- Flag JS as available before first paint, so [data-animate] elements are
+       pre-hidden ONLY when we can actually reveal them (see styles.css). -->
+  <script>
+    document.documentElement.classList.add("has-js");
+  </script>
+</head>
+<body id="top">
+  <!-- ======================================================================
+       Header — Figma node 194:1198
+       ====================================================================== -->
+  <header class="site-header" data-header>
+    <div class="site-header__inner">
+      <a class="site-header__logo" href="#top" aria-label="Brandco home">BRANDCO<span class="site-header__logo-reg">&reg;</span></a>
+
+      <nav class="site-nav" id="primary-nav" aria-label="Main navigation">
+        <ul class="site-nav__list">
+          <li><a class="site-nav__link" href="#about">About us</a></li>
+          <li><a class="site-nav__link" href="#services">Services</a></li>
+          <li><a class="site-nav__link" href="#cases">Cases</a></li>
+          <li><a class="site-nav__link" href="#process">Process</a></li>
+          <li><a class="site-nav__link" href="#contacts">Contacts</a></li>
+        </ul>
+      </nav>
+
+      <a class="btn btn--outline btn--tint btn--trace site-header__cta" href="#contacts">Start a project<svg class="btn__trace" viewBox="0 0 191 48" preserveAspectRatio="none" aria-hidden="true" focusable="false"><rect class="btn__trace-rect" x="0.5" y="0.5" width="190" height="47" pathLength="100" /></svg></a>
+
+      <!-- Mobile only (Figma 434:1753): a 48x48 button whose 32x32 icon box
+           holds two 24x2 bars. Hidden above 767px by a base rule in styles.css. -->
+      <button
+        class="site-header__burger"
+        type="button"
+        aria-label="Open menu"
+        aria-expanded="false"
+        aria-controls="mobile-nav"
+        data-burger
+      >
+        <span class="site-header__burger-icon" aria-hidden="true"></span>
+      </button>
+    </div>
+
+    <!-- PROVISIONAL: Figma draws no open state for the burger, so this panel
+         reuses the primary nav links. Swap it once the design exists. -->
+    <div class="site-nav-panel" id="mobile-nav" data-nav-panel>
+      <nav aria-label="Mobile navigation">
+        <ul class="site-nav-panel__list">
+          <li><a class="site-nav-panel__link" href="#about">About us</a></li>
+          <li><a class="site-nav-panel__link" href="#services">Services</a></li>
+          <li><a class="site-nav-panel__link" href="#cases">Cases</a></li>
+          <li><a class="site-nav-panel__link" href="#process">Process</a></li>
+          <li><a class="site-nav-panel__link" href="#contacts">Contacts</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- ====================================================================
+         Hero — Figma node 224:4605 (BRANDCO STUDIO® wordmark screen)
+         ==================================================================== -->
+    <section class="hero" aria-labelledby="hero-title">
+      <!-- Scene: static starfield/glow (Bg) + rotating Moon + legibility fade.
+           Bg and Moon fill one shared, canvas-aspect "stage" so they map 1:1
+           (no static twin); the scene's overflow:hidden clips the stage overscan
+           to the hero bounds without ever clipping content or the page scroll. -->
+      <div class="hero__scene" role="presentation">
+        <div class="hero__stage">
+          <div class="hero__bg"></div>
+          <div class="hero__moon"></div>
+        </div>
+        <div class="hero__overlay"></div>
+      </div>
+
+      <div class="hero__inner">
+        <!-- Each word sits in its own .hero__line "slot". On load initHeroReveal
+             clips the slot at its bottom edge and slides the word up out of it —
+             a masked line rise, BRANDCO then STUDIO. The slot is the flex item
+             (so STUDIO's right-alignment lives on .hero__line--end); the word is
+             a plain block inside it. No data-animate on the h1: the words are
+             the animated things, via data-hero-word. -->
+        <h1 class="hero__wordmark" id="hero-title">
+          <span class="hero__line">
+            <span class="hero__word" data-text="Brandco" data-hero-word>Brandco</span>
+          </span>
+          <span class="hero__line hero__line--end">
+            <span class="hero__word hero__word--outline" data-text="Studio" data-hero-word>
+              Studio<span class="hero__reg" aria-hidden="true">R</span>
+            </span>
+          </span>
+        </h1>
+
+        <div class="hero__bottom">
+          <!-- data-reveal, not data-animate: this row sits ~970px down, below the
+               fold on a normal screen, so a load animation played where nobody
+               could see it. It reveals when scrolled to instead. -->
+          <div class="hero__mission" data-reveal>
+            <p class="hero__mission-label">[ Our mission ]</p>
+            <p class="hero__mission-text">
+              We build brands that work like systems — clear, consistent and made to sell.
+              Not decoration. Direction
+            </p>
+          </div>
+
+          <a class="btn btn--outline btn--hero btn--bracket-corners hero__cta" href="#contacts" data-reveal>
+            <span class="btn__label">Discuss your project</span>
+            <svg class="btn__arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M7 17 17 7M9 7h8v8" stroke="currentColor" stroke-width="2"
+                stroke-linecap="square" stroke-linejoin="miter" />
+            </svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Ticker bar — Figma "Navigation Bar" (194:1134). Seamless marquee: the
+           list is duplicated (2nd copy aria-hidden) and the track scrolls left by
+           exactly one copy's width, then loops — so it never visibly restarts. -->
+      <div class="hero__ticker" data-animate>
+        <div class="ticker">
+          <ul class="ticker__group">
+            <li class="ticker__item"><span class="ticker__dot" aria-hidden="true"></span>Open for collaborations</li>
+            <li class="ticker__item"><span class="ticker__dot" aria-hidden="true"></span>Branding / Identity / Packaging / Web / Mobile / Motion</li>
+            <li class="ticker__item"><span class="ticker__dot" aria-hidden="true"></span>Global design practice</li>
+          </ul>
+          <ul class="ticker__group" aria-hidden="true">
+            <li class="ticker__item"><span class="ticker__dot" aria-hidden="true"></span>Open for collaborations</li>
+            <li class="ticker__item"><span class="ticker__dot" aria-hidden="true"></span>Branding / Identity / Packaging / Web / Mobile / Motion</li>
+            <li class="ticker__item"><span class="ticker__dot" aria-hidden="true"></span>Global design practice</li>
+          </ul>
+          <ul class="ticker__group" aria-hidden="true">
+            <li class="ticker__item"><span class="ticker__dot" aria-hidden="true"></span>Open for collaborations</li>
+            <li class="ticker__item"><span class="ticker__dot" aria-hidden="true"></span>Branding / Identity / Packaging / Web / Mobile / Motion</li>
+            <li class="ticker__item"><span class="ticker__dot" aria-hidden="true"></span>Global design practice</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         Story block — shared wrapper + background for every section from
+         About down to the Footer (Figma "Bg-all" 260:2728). The background
+         art lives on this wrapper so all sections share one continuous scene.
+         NOTE: About is the only child for now; Services / Process / Cases /
+         Team / Reviews / Footer get appended here in the order from CLAUDE.md.
+         ==================================================================== -->
+    <div class="story-block">
+      <!-- Background scene — the Figma "Bg-all" (260:2728) delivered as vertical
+           slices (1440px wide each), stacked with NO gap. Block images in normal
+           flow butt edge-to-edge, so the join is pixel-tight; their summed height
+           drives the wrapper height. Purely decorative.
+
+           This HEAD wrapper carries slice 1 only (2681px = About + Services).
+           Slice 2 is gone: it was a flat #101010 fill under Cases, and Cases now
+           paints that colour itself so it can grow/shrink with its cards.
+           Slices 3-4 live in the TAIL wrapper further down. -->
+      <div class="story-block__bg" aria-hidden="true">
+        <img class="story-block__bg-part story-block__bg-part--1" src="assets/images/Bg-all 1-3.png" width="1920" height="3575" alt="" />
+      </div>
+    <!-- ====================================================================
+         About + Stats — Figma node 194:1222 (follows the hero)
+         ==================================================================== -->
+    <section class="about" id="about" aria-labelledby="about-title">
+      <div class="about__inner">
+        <div class="about__intro">
+          <h2 class="about__title" id="about-title" data-reveal>
+            <span class="about__label">[ About us ]</span>
+            <!-- Figma's mobile frame draws this headline as 8 HARD lines
+                 (434:1827), each staggered by leading spaces baked into the text.
+                 One span per Figma line, carrying those literal spaces.
+
+                 On DESKTOP nothing changes: the spans stay inline and inherit
+                 white-space:normal, so every run of spaces collapses to one and the
+                 leading run is dropped — the block renders as the single flowing
+                 string it replaced, still wrapped by .about__headline's
+                 text-indent. Mobile turns each span into a block with
+                 white-space:pre-wrap, which brings the stagger back. The
+                 white-space switch is on the LINE, not the parent, so the source
+                 newlines BETWEEN the spans stay collapsible and never become
+                 blank lines. -->
+            <span class="about__headline">
+                <span class="about__headline-line">         We are a </span>
+                <span class="about__headline-line">branding           </span>
+                <span class="about__headline-line">         agency </span>
+                <span class="about__headline-line">building     </span>
+                <span class="about__headline-line">      identities </span>
+                <span class="about__headline-line">that sell,</span>
+                <span class="about__headline-line">      scale and </span>
+                <span class="about__headline-line">                         stay</span>
+            </span>
+          </h2>
+
+          <div class="about__desc" data-reveal>
+            <p class="about__desc-col">
+              We treat a brand as infrastructure, not as a picture. Strategy comes first,
+              aesthetics follow — every color, word and layout has a job to do and a metric to move.
+            </p>
+            <p class="about__desc-col">
+              From positioning to packaging, we build systems that teams can actually use:
+              clear rules, flexible components, and an identity that survives contact with reality.
+            </p>
+          </div>
+        </div>
+
+        <dl class="about__stats" data-stats>
+          <div class="stat">
+            <dd class="stat__value" data-prefix="" data-target="120" data-suffix="+">120+</dd>
+            <dt class="stat__label">Projects delivered</dt>
+          </div>
+          <div class="stat">
+            <dd class="stat__value" data-prefix="+" data-target="64" data-suffix="%">+64%</dd>
+            <dt class="stat__label">Avg. brand lift</dt>
+          </div>
+          <div class="stat">
+            <dd class="stat__value" data-prefix="+" data-target="18" data-suffix="">+18</dd>
+            <dt class="stat__label">Industries covered</dt>
+          </div>
+          <div class="stat">
+            <dd class="stat__value" data-prefix="+" data-target="7" data-suffix="">+7</dd>
+            <dt class="stat__label">Years on the market</dt>
+          </div>
+        </dl>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         Services — Figma node 223:3981. First section on the LIGHT band of
+         the Bg-all scene, so the text colours are inverted (dark on light).
+         Single-open accordion: item 01 starts expanded.
+         ==================================================================== -->
+    <section class="services" id="services" aria-labelledby="services-title">
+      <div class="services__inner">
+        <h2 class="services__title" id="services-title" data-reveal>
+          <span class="services__label">[ Services ]</span>
+          <span class="services__headline">
+            <span class="services__headline-line">What we do to make</span>
+            <!-- Split so mobile can drop "grow //" onto its own line (Figma
+                 434:1806 is three hard paragraphs). On desktop the parts stay
+                 inline and the source newline collapses to one space inside
+                 the nowrap line, so this renders exactly as before. -->
+            <span class="services__headline-line services__headline-line--indent"
+              ><span class="services__headline-part">your Brand</span>
+              <span class="services__headline-part services__headline-part--drop">grow //</span></span
+            >
+          </span>
+        </h2>
+
+        <ul class="services__list" data-accordion>
+          <li class="services__item is-open" data-accordion-item>
+            <h3 class="services__heading">
+              <button class="services__row" type="button" aria-expanded="true" aria-controls="service-panel-1">
+                <span class="services__name">
+                  <span class="services__num">[01]</span>
+                  <span class="services__caption">
+                    <span class="services__dot" aria-hidden="true"></span>
+                    <span class="services__service">Brand strategy</span>
+                  </span>
+                </span>
+                <span class="btn btn--bracket-corners services__toggle" aria-hidden="true">
+                  <span class="services__plus"></span>
+                </span>
+              </button>
+            </h3>
+            <img class="services__thumb" src="assets/images/services/brand.webp" width="234" height="234" alt="" loading="lazy" />
+            <div class="services__panel" id="service-panel-1" data-accordion-panel>
+              <div class="services__panel-inner">
+                <p class="services__desc" data-accordion-content>
+                  A fundamental business development plan is to identify your target audience,
+                  market positioning, and key values to ensure long-term growth
+                </p>
+                <div class="services__tags" data-accordion-content>
+                  <span class="services__tag">Research</span>
+                  <span class="services__tag">Positioning</span>
+                </div>
+              </div>
+            </div>
+          </li>
+
+          <li class="services__item" data-accordion-item>
+            <h3 class="services__heading">
+              <button class="services__row" type="button" aria-expanded="false" aria-controls="service-panel-2">
+                <span class="services__name">
+                  <span class="services__num">[02]</span>
+                  <span class="services__caption">
+                    <span class="services__dot" aria-hidden="true"></span>
+                    <span class="services__service">Visual Identity</span>
+                  </span>
+                </span>
+                <span class="btn btn--bracket-corners services__toggle" aria-hidden="true">
+                  <span class="services__plus"></span>
+                </span>
+              </button>
+            </h3>
+            <img class="services__thumb" src="assets/images/services/visual.webp" width="234" height="234" alt="" loading="lazy" />
+            <div class="services__panel" id="service-panel-2" data-accordion-panel>
+              <div class="services__panel-inner">
+                <p class="services__desc" data-accordion-content>
+                  The brand’s visual language graphics, style and logo, 
+                  brought into a unified system and documented in a brand book
+                </p>
+                <div class="services__tags" data-accordion-content>
+                  <span class="services__tag">Logo</span>
+                  <span class="services__tag">Brand Book</span>
+                </div>
+              </div>
+            </div>
+          </li>
+
+          <li class="services__item" data-accordion-item>
+            <h3 class="services__heading">
+              <button class="services__row" type="button" aria-expanded="false" aria-controls="service-panel-3">
+                <span class="services__name">
+                  <span class="services__num">[03]</span>
+                  <span class="services__caption">
+                    <span class="services__dot" aria-hidden="true"></span>
+                    <span class="services__service">Web Design &amp; Development</span>
+                  </span>
+                </span>
+                <span class="btn btn--bracket-corners services__toggle" aria-hidden="true">
+                  <span class="services__plus"></span>
+                </span>
+              </button>
+            </h3>
+            <img class="services__thumb" src="assets/images/services/web.webp" width="234" height="234" alt="" loading="lazy" />
+            <div class="services__panel" id="service-panel-3" data-accordion-panel>
+              <div class="services__panel-inner">
+                <p class="services__desc" data-accordion-content>
+                  From intuitive interface structure to seamless Webflow development, 
+                  we create responsive websites focused on flawless user experience 
+                  and high conversion rates
+                </p>
+                <div class="services__tags" data-accordion-content>
+                  <span class="services__tag">UX / UI</span>
+                  <span class="services__tag">Web design</span>
+                  <span class="services__tag">Webflow</span>
+                </div>
+              </div>
+            </div>
+          </li>
+
+          <li class="services__item" data-accordion-item>
+            <h3 class="services__heading">
+              <button class="services__row" type="button" aria-expanded="false" aria-controls="service-panel-4">
+                <span class="services__name">
+                  <span class="services__num">[04]</span>
+                  <span class="services__caption">
+                    <span class="services__dot" aria-hidden="true"></span>
+                    <span class="services__service">Packaging</span>
+                  </span>
+                </span>
+                <span class="btn btn--bracket-corners services__toggle" aria-hidden="true">
+                  <span class="services__plus"></span>
+                </span>
+              </button>
+            </h3>
+            <img class="services__thumb" src="assets/images/services/packing.webp" width="234" height="234" alt="" loading="lazy" />
+            <div class="services__panel" id="service-panel-4" data-accordion-panel>
+              <div class="services__panel-inner">
+                <p class="services__desc" data-accordion-content>
+                  Functional and aesthetic physical packaging design that emphasizes 
+                  the value of the product and helps it stand out from the competition
+                </p>
+                <div class="services__tags" data-accordion-content>
+                  <span class="services__tag">packaging design</span>
+                  <span class="services__tag">Visual identity</span>
+                </div>
+              </div>
+            </div>
+          </li>
+
+          <li class="services__item" data-accordion-item>
+            <h3 class="services__heading">
+              <button class="services__row" type="button" aria-expanded="false" aria-controls="service-panel-5">
+                <span class="services__name">
+                  <span class="services__num">[05]</span>
+                  <span class="services__caption">
+                    <span class="services__dot" aria-hidden="true"></span>
+                    <span class="services__service">Mobile App</span>
+                  </span>
+                </span>
+                <span class="btn btn--bracket-corners services__toggle" aria-hidden="true">
+                  <span class="services__plus"></span>
+                </span>
+              </button>
+            </h3>
+            <img class="services__thumb" src="assets/images/services/mobile.webp" width="234" height="234" alt="" loading="lazy" />
+            <div class="services__panel" id="service-panel-5" data-accordion-panel>
+              <div class="services__panel-inner">
+                <p class="services__desc" data-accordion-content>
+                  Intuitive interfaces for iOS and Android that combine smooth navigation, 
+                  thoughtful architecture, and modern visual aesthetics
+                </p>
+                <div class="services__tags" data-accordion-content>
+                  <span class="services__tag">UX / UI</span>
+                  <span class="services__tag">IOS / ANDROID</span>
+                </div>
+              </div>
+            </div>
+          </li>
+
+          <li class="services__item" data-accordion-item>
+            <h3 class="services__heading">
+              <button class="services__row" type="button" aria-expanded="false" aria-controls="service-panel-6">
+                <span class="services__name">
+                  <span class="services__num">[06]</span>
+                  <span class="services__caption">
+                    <span class="services__dot" aria-hidden="true"></span>
+                    <!-- Figma 434:1819 breaks this name by hand (a real <br>),
+                         not on width — "MOTION DESIGN" fits the 200px column.
+                         The break is suppressed on desktop. -->
+                    <span class="services__service">Motion <br class="services__break" aria-hidden="true" />design</span>
+                  </span>
+                </span>
+                <span class="btn btn--bracket-corners services__toggle" aria-hidden="true">
+                  <span class="services__plus"></span>
+                </span>
+              </button>
+            </h3>
+            <img class="services__thumb" src="assets/images/services/motion.webp" width="234" height="234" alt="" loading="lazy" />
+            <div class="services__panel" id="service-panel-6" data-accordion-panel>
+              <div class="services__panel-inner">
+                <p class="services__desc" data-accordion-content>
+                  Dynamic visual storytelling through animation, which brings static 
+                  elements to life, attracts attention and helps explain complex ideas simply
+                </p>
+                <div class="services__tags" data-accordion-content>
+                  <span class="services__tag">Animation</span>
+                  <span class="services__tag">VFX</span>
+                </div>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </section>
+    </div><!-- /.story-block (head: slice 1 — About + Services) -->
+
+    <!-- ====================================================================
+         Cases — Figma node 194:1244 (1440 x 2980 at frame y=3850). Back on
+         the DARK band, so the colours return to the Hero/About set. Sits
+         directly after Services because Process (which comes between them in
+         CLAUDE.md's order) does not exist yet.
+
+         UNLIKE About/Services this section is in NORMAL DOCUMENT FLOW, not
+         absolutely positioned on the shared background. It paints its own band
+         (--color-bg-cases) instead of sitting on a Bg-all slice, so its height
+         follows its cards: filter the grid down to one card and the section
+         shrinks with it instead of leaving a tall empty black gap.
+
+         The 3 "Grop_Case" wrappers from Figma are deliberately NOT reproduced:
+         all 7 cards are siblings in one flex-wrap row, which reproduces the
+         designed rows exactly (see .cases__grid) AND lets the grid reflow when
+         a category filter removes cards.
+         ==================================================================== -->
+    <section class="cases" id="cases" aria-labelledby="cases-title">
+      <div class="cases__inner">
+        <div class="cases__head">
+          <h2 class="cases__title" id="cases-title" data-reveal>
+            <span class="cases__label">[ Cases ]</span>
+            <!-- Mobile (Figma 434:1850) breaks this into FIVE hard lines where
+                 desktop has two, each with its own indent baked in as leading
+                 spaces. The parts are plain inline spans, so desktop is
+                 untouched: the source newlines collapse to single spaces and the
+                 two nowrap lines still read "WHEN THE BRAND IS" / "RIGHT RESULTS
+                 FOLLOW". The mobile block turns them into blocks and re-indents
+                 each one. Same pattern as .services__headline-part above; the
+                 `><span` placement keeps a leading space out of every line. -->
+            <span class="cases__headline">
+              <span class="cases__headline-line cases__headline-line--indent"
+                ><span class="cases__headline-part cases__headline-part--indent-1">When the</span>
+                <span class="cases__headline-part">brand is</span></span
+              >
+              <span class="cases__headline-line"
+                ><span class="cases__headline-part cases__headline-part--indent-2">right</span>
+                <span class="cases__headline-part">results</span>
+                <span class="cases__headline-part cases__headline-part--indent-3">follow</span></span
+              >
+            </span>
+          </h2>
+
+          <p class="cases__thesis" data-reveal>
+            Our clients gain measurable growth because brands work on numbers — not taste.
+          </p>
+        </div>
+
+        <div class="cases__body">
+          <div class="cases__filters" role="group" aria-label="Filter cases by category" data-cases-filters>
+            <button class="cases__filter is-active" type="button" data-filter="all" aria-pressed="true">All</button>
+            <button class="cases__filter" type="button" data-filter="identity" aria-pressed="false">Identity</button>
+            <button class="cases__filter" type="button" data-filter="web-design" aria-pressed="false">Web Design</button>
+            <button class="cases__filter" type="button" data-filter="mobile-app" aria-pressed="false">Mobile App</button>
+            <button class="cases__filter" type="button" data-filter="packaging" aria-pressed="false">Packaging</button>
+            <button class="cases__filter" type="button" data-filter="motion" aria-pressed="false">Motion</button>
+            <button class="cases__filter" type="button" data-filter="strategy" aria-pressed="false">Strategy</button>
+          </div>
+
+          <div class="cases__grid" data-cases-grid>
+            <article class="cases__card cases__card--md" data-categories="packaging identity">
+              <div class="cases__media">
+                <img class="cases__img" src="assets/images/cases/matcha.webp" width="515" height="515"
+                  alt="Matcha Club — tin and pouch packaging with loose matcha powder" loading="lazy" />
+                <div class="cases__tags">
+                  <span class="cases__tag">Packaging</span>
+                  <span class="cases__tag">Identity</span>
+                </div>
+              </div>
+              <div class="cases__name">
+                <h3 class="cases__project">Matcha Club</h3>
+                <p class="cases__year">2025</p>
+              </div>
+            </article>
+
+            <article class="cases__card cases__card--lg" data-categories="mobile-app">
+              <div class="cases__media cases__media--bottom">
+                <img class="cases__img" src="assets/images/cases/vaulta.webp" width="733" height="800"
+                  alt="Vaulta Neobank — account overview screen on a phone" loading="lazy" />
+                <div class="cases__tags">
+                  <span class="cases__tag">Mobile App</span>
+                </div>
+              </div>
+              <div class="cases__name">
+                <h3 class="cases__project">Vaulta Neobank</h3>
+                <p class="cases__year">2024</p>
+              </div>
+            </article>
+
+            <article class="cases__card cases__card--sm" data-categories="motion">
+              <div class="cases__media cases__media--bottom">
+                <img class="cases__img" src="assets/images/cases/kinetic.webp" width="405" height="480"
+                  alt="Kinetic — wordmark over a tennis court" loading="lazy" />
+                <div class="cases__tags">
+                  <span class="cases__tag">Motion</span>
+                </div>
+              </div>
+              <div class="cases__name">
+                <h3 class="cases__project">Kinetic</h3>
+                <p class="cases__year">2025</p>
+              </div>
+            </article>
+
+            <article class="cases__card cases__card--sm cases__card--short" data-categories="identity strategy">
+              <div class="cases__media">
+                <picture>
+                  <!-- Mobile gets its OWN crop. The desktop file is framed for a portrait
+                     card (405x480 / 515x515); the mobile card is a 343x301 LANDSCAPE
+                     frame, and cover-fitting the portrait file into it cut the
+                     subject. These are the designer's re-cropped mobile assets
+                     (Figma 434:1864, 2026-08-21). They are baked GREYSCALE, which is
+                     exactly the rest state and costs nothing on touch — the
+                     grayscale->colour hover reveal is unreachable there anyway, and
+                     desktop still gets the colour original below. -->
+                  <source media="(max-width: 767px)"
+                    srcset="assets/images/cases/mobile/skully.webp" width="1024" height="559" />
+                  <img class="cases__img" src="assets/images/cases/skully.webp" width="405" height="320"
+                    alt="Skully — round hanging shop sign on a street facade" loading="lazy" />
+                </picture>
+                <div class="cases__tags">
+                  <span class="cases__tag">Identity</span>
+                  <span class="cases__tag">Strategy</span>
+                </div>
+              </div>
+              <div class="cases__name">
+                <h3 class="cases__project">Bloop</h3>
+                <p class="cases__year">2026</p>
+              </div>
+            </article>
+
+            <article class="cases__card cases__card--sm" data-categories="web-design strategy">
+              <div class="cases__media cases__media--bottom">
+                <picture>
+                  <!-- Designer's mobile crop — see the note on the Bloop card above. -->
+                  <source media="(max-width: 767px)"
+                    srcset="assets/images/cases/mobile/synapse.webp" width="1024" height="765" />
+                  <img class="cases__img" src="assets/images/cases/synapse.webp" width="405" height="480"
+                    alt="Synapse — analytics dashboard on a laptop" loading="lazy" />
+                </picture>
+                <div class="cases__tags">
+                  <span class="cases__tag">Web Design</span>
+                  <span class="cases__tag">Strategy</span>
+                </div>
+              </div>
+              <div class="cases__name">
+                <h3 class="cases__project">Synapse</h3>
+                <p class="cases__year">2024</p>
+              </div>
+            </article>
+
+            <article class="cases__card cases__card--md" data-categories="mobile-app identity">
+              <div class="cases__media">
+                <picture>
+                  <!-- Designer's mobile crop — see the note on the Bloop card above. -->
+                  <source media="(max-width: 767px)"
+                    srcset="assets/images/cases/mobile/silent-moon.webp" width="1024" height="768" />
+                  <img class="cases__img" src="assets/images/cases/silent-moon.webp" width="515" height="515"
+                    alt="Silent Moon — meditation app home screen on a phone" loading="lazy" />
+                </picture>
+                <div class="cases__tags">
+                  <span class="cases__tag">Mobile App</span>
+                  <span class="cases__tag">Identity</span>
+                </div>
+              </div>
+              <div class="cases__name">
+                <h3 class="cases__project">Silent moon</h3>
+                <p class="cases__year">2026</p>
+              </div>
+            </article>
+
+            <article class="cases__card cases__card--lg" data-categories="web-design">
+              <div class="cases__media cases__media--bottom">
+                <img class="cases__img" src="assets/images/cases/botanica.webp" width="733" height="800"
+                  alt="Botanica — product catalogue page on a desktop monitor" loading="lazy" />
+                <div class="cases__tags">
+                  <span class="cases__tag">Web Design</span>
+                </div>
+              </div>
+              <div class="cases__name">
+                <h3 class="cases__project">Botanica E-Commerce</h3>
+                <p class="cases__year">2025</p>
+              </div>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         Story block — TAIL. Slices 3 + 4 of the same Bg-all scene (1322 + 3889
+         = 5211px). Slice 3 IS the Process band (Figma y=6830, so Process follows
+         Cases here exactly as in the mockup); slice 4 is reserved for
+         Team / Reviews / Footer, which do not exist yet.
+
+         Process is absolutely positioned against THIS wrapper at top:0 — it fills
+         slice 3 (1322px) the same way About fills the top of the head wrapper.
+         Any later section on slice 4 sits at top:1322px (or, better, drop it in
+         normal flow after Process since Cases already broke the fixed origin).
+         ==================================================================== -->
+    <div class="story-block story-block--tail">
+      <div class="story-block__bg" aria-hidden="true">
+        <img class="story-block__bg-part story-block__bg-part--3" src="assets/images/Bg-all 3.png" width="1920" height="1763" alt="" loading="lazy" />
+        <img class="story-block__bg-part story-block__bg-part--4" src="assets/images/Bg-all 4-4.png" width="1920" height="5186" alt="" loading="lazy" />
+
+        <!-- Footer starfield. The stars in the slice above are baked pixels and
+             can never move, so this canvas draws a second, live population over
+             them (slow drift + cursor parallax) — see initFooterStars().
+
+             It hangs off the WRAPPER, not off .footer, for the same reason the
+             Reviews hairline does: .footer is the centred 1440px canvas, so a
+             child of it could never span the full screen. .story-block__bg is
+             not positioned, so this resolves against .story-block--tail, whose
+             'left:0; right:0' IS the full screen — no vw needed.
+
+             No z-index: being positioned puts it above the in-flow slices, and
+             coming before .process/.team/.reviews/.footer in DOM order keeps it
+             below every bit of footer content. -->
+        <canvas class="footer__stars" data-footer-stars aria-hidden="true"></canvas>
+      </div>
+
+      <!-- ==================================================================
+           Process — Figma node 223:3999 (1440 x 1322 at frame y=6830). Static
+           (always 4 steps), so it sits absolutely on slice 3 of the shared bg,
+           like About. LIGHT band → dark ink colours (--color-ink set).
+
+           Chequerboard layout: steps 01/03 align LEFT, steps 02/04 align RIGHT
+           (a 405px block inset --process-step-inset from the right). Vertical
+           gaps are a uniform 32px — the "staircase" is the L/R zigzag plus the
+           differing description heights, not uneven spacing.
+           ================================================================== -->
+      <section class="process" id="process" aria-labelledby="process-title">
+        <div class="process__inner">
+          <h2 class="process__title" id="process-title" data-reveal>
+            <span class="process__label">[ Process ]</span>
+            <span class="process__headline">
+              <span class="process__headline-line">A structured path</span>
+              <span class="process__headline-line process__headline-line--indent">to your brand //</span>
+            </span>
+          </h2>
+
+          <ol class="process__steps">
+            <li class="process__step process__step--left" data-reveal>
+              <div class="process__block">
+                <div class="process__name">
+                  <p class="process__num">01 /</p>
+                  <h3 class="process__heading">Brand audit</h3>
+                </div>
+                <p class="process__desc">
+                  A deep analysis of your business, market and competitors. We define
+                  your ideal customer profile, find growth bottlenecks and decide what
+                  the brand can realistically move
+                </p>
+              </div>
+            </li>
+
+            <li class="process__step process__step--right" data-reveal>
+              <div class="process__block">
+                <div class="process__name">
+                  <p class="process__num">02 /</p>
+                  <h3 class="process__heading">Strategy &amp; positioning</h3>
+                </div>
+                <p class="process__desc">
+                  Based on the audit we build the strategic brand platform: positioning,
+                  values, core messaging and tone of voice aligned with business goals
+                  and the target decision-maker journey
+                </p>
+              </div>
+            </li>
+
+            <li class="process__step process__step--left" data-reveal>
+              <div class="process__block">
+                <div class="process__name">
+                  <p class="process__num">03 /</p>
+                  <h3 class="process__heading">Identity &amp; design</h3>
+                </div>
+                <p class="process__desc">
+                  The visual system: logo, typography, color, guidelines and carriers.
+                  Every element is built to support long-term recognition — not
+                  a one-season look
+                </p>
+              </div>
+            </li>
+
+            <li class="process__step process__step--right" data-reveal>
+              <div class="process__block">
+                <div class="process__name">
+                  <p class="process__num">04 /</p>
+                  <h3 class="process__heading">Launch &amp; support</h3>
+                </div>
+                <p class="process__desc">
+                  We roll the brand out across every touchpoint, monitor performance,
+                  refine messaging and design based on real results and scale what works
+                </p>
+              </div>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- ==================================================================
+           Team — Figma node 223:4097 (1440 x 1574 at frame y=8152). Team's
+           Figma top lands exactly on the slice-3 → slice-4 seam, so it sits
+           absolutely on slice 4 at top:1322px, directly below Process. Back on
+           the DARK band → the Hero/About/Cases light-on-dark palette.
+
+           STATIC: always exactly 6 members, so — like About and Process — it is
+           pinned to the shared background instead of living in normal flow.
+           The 952px grid is right-aligned under a full-width title (Figma
+           items-end); hovering a card zooms its photo like the Cases cards.
+           ================================================================== -->
+      <section class="team" id="team" aria-labelledby="team-title">
+        <div class="team__inner">
+          <h2 class="team__title" id="team-title" data-reveal>
+            <span class="team__label">[ Team ]</span>
+            <!-- Split into parts for mobile, where Figma 434:1903 breaks this
+                 into FOUR paragraphs at three different indents (and the third
+                 wraps, giving five drawn lines). The parts are plain inline
+                 spans, so desktop is untouched: the source newlines collapse to
+                 single spaces and the two nowrap lines still read "A TEAM THAT
+                 KNOWS" / "HOW TO BUILD BRANDS". Same pattern as
+                 .cases__headline-part; the `><span` placement keeps a leading
+                 space out of every mobile line. -->
+            <span class="team__headline">
+              <span class="team__headline-line team__headline-line--indent"
+                ><span class="team__headline-part team__headline-part--indent-1">A team</span>
+                <span class="team__headline-part">that knows</span></span
+              >
+              <span class="team__headline-line"
+                ><span class="team__headline-part team__headline-part--indent-3 team__headline-part--wrap">how to build</span>
+                <span class="team__headline-part team__headline-part--indent-4">brands</span></span
+              >
+            </span>
+          </h2>
+
+          <ul class="team__grid" data-team-grid>
+            <li class="team__card">
+              <div class="team__media">
+                <img class="team__photo" src="assets/images/team/albina2.png" width="296" height="320"
+                  alt="Albina Koval" loading="lazy" />
+              </div>
+              <div class="team__info">
+                <div class="team__name-group">
+                  <h3 class="team__name">Albina Koval</h3>
+                  <p class="team__role">Art Director</p>
+                </div>
+                <p class="team__bio">
+                  Leading the strategic visual vision for global brands. An award-winning expert in corporate identity
+                </p>
+              </div>
+            </li>
+
+            <li class="team__card">
+              <div class="team__media">
+                <img class="team__photo" src="assets/images/team/yana2.png" width="296" height="320"
+                  alt="Yana Shevchenko" loading="lazy" />
+              </div>
+              <div class="team__info">
+                <div class="team__name-group">
+                  <h3 class="team__name">Yana Shevchenko</h3>
+                  <p class="team__role">UX/UI Designer</p>
+                </div>
+                <p class="team__bio">
+                  Crafting highly intuitive mobile and web products. Focused on user-centric logic and seamless flows
+                </p>
+              </div>
+            </li>
+
+            <li class="team__card">
+              <div class="team__media">
+                <img class="team__photo" src="assets/images/team/maksym2.png" width="296" height="320"
+                  alt="Maksym Tkachuk" loading="lazy" />
+              </div>
+              <div class="team__info">
+                <div class="team__name-group">
+                  <h3 class="team__name">Maksym Tkachuk</h3>
+                  <p class="team__role">Motion Designer</p>
+                </div>
+                <p class="team__bio">
+                  Bringing static interfaces to life. A proven expert in dynamic storytelling, motion, and 3D animation
+                </p>
+              </div>
+            </li>
+
+            <li class="team__card">
+              <div class="team__media">
+                <img class="team__photo" src="assets/images/team/olena2.png" width="296" height="320"
+                  alt="Olena Kravets" loading="lazy" />
+              </div>
+              <div class="team__info">
+                <div class="team__name-group">
+                  <h3 class="team__name">Olena Kravets</h3>
+                  <p class="team__role">Brand Strategist</p>
+                </div>
+                <p class="team__bio">
+                  Shaping global tech &amp; lifestyle brands for over 10 years. An expert in market positioning &amp; growth
+                </p>
+              </div>
+            </li>
+
+            <li class="team__card">
+              <div class="team__media">
+                <img class="team__photo" src="assets/images/team/sofia2.png" width="296" height="320"
+                  alt="Sofia Romanova" loading="lazy" />
+              </div>
+              <div class="team__info">
+                <div class="team__name-group">
+                  <h3 class="team__name">Sofia Romanova</h3>
+                  <p class="team__role">Packaging Designer</p>
+                </div>
+                <p class="team__bio">
+                  Creating tactile brand experiences. Designing physical products that stand out on every shelf
+                </p>
+              </div>
+            </li>
+
+            <li class="team__card">
+              <div class="team__media">
+                <img class="team__photo" src="assets/images/team/dmytro2.png" width="296" height="320"
+                  alt="Dmytro Melnyk" loading="lazy" />
+              </div>
+              <div class="team__info">
+                <div class="team__name-group">
+                  <h3 class="team__name">Dmytro Melnyk</h3>
+                  <p class="team__role">Project Manager</p>
+                </div>
+                <p class="team__bio">
+                  Ensuring seamless client collaboration. Delivering complex digital campaigns strictly on time
+                </p>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ==================================================================
+           Reviews — Figma node 223:4108 (1440 x 1035 at frame y=9727). Sits
+           absolutely on slice 4 of the shared bg, directly below Team, on the
+           DARK band → the Hero/About/Team light-on-dark palette.
+
+           Stacked-card carousel: the active review is a full-size cream card
+           in front; 4 more fan up-and-right behind it for depth. Prev/next
+           arrows (and swipe) cycle the stack; the progress bar tracks position.
+           FIXED height (cards swap in place), so — like Team — it is pinned to
+           the background instead of living in normal flow.
+
+           Only James O'Connor (front) and Anastasia Litvinenko carry real copy;
+           cards 3-5 are LABELLED PLACEHOLDERS to be replaced in code.
+           ================================================================== -->
+      <section class="reviews" id="reviews" aria-labelledby="reviews-title">
+        <div class="reviews__inner">
+          <h2 class="reviews__title" id="reviews-title" data-reveal>
+            <span class="reviews__label">[ Social proof ]</span>
+            <span class="reviews__headline">
+              <span class="reviews__headline-line">Because we deliver</span>
+              <span class="reviews__headline-line reviews__headline-line--indent">real growth //</span>
+            </span>
+          </h2>
+
+          <div class="reviews__carousel" data-reviews>
+            <div class="reviews__stack" data-reviews-stack>
+              <!-- Card 1 — James O'Connor (real, active on load) -->
+              <article class="reviews__card" data-review-card>
+                <div class="reviews__body">
+                  <p class="reviews__role">Head of Product at Vaulta Neobank</p>
+                  <h3 class="reviews__name">James O&rsquo;Connor</h3>
+                  <blockquote class="reviews__quote">
+                    [ Security and simplicity rarely go hand in hand, but this agency
+                    nailed it. They designed a banking interface that feels incredibly
+                    safe while remaining effortless for our customers to navigate daily. ]
+                  </blockquote>
+                  <a class="reviews__link" href="#">View the case +</a>
+                </div>
+                <div class="reviews__media">
+                  <img class="reviews__photo" src="assets/images/reviews/james.png"
+                    width="216" height="256" alt="James O'Connor" loading="lazy" />
+                </div>
+              </article>
+
+              <!-- Card 2 — Anastasia Litvinenko (real) -->
+              <article class="reviews__card" data-review-card>
+                <div class="reviews__body">
+                  <p class="reviews__role">Ceo of lumina retail</p>
+                  <h3 class="reviews__name">Elena Rostova</h3>
+                  <blockquote class="reviews__quote">
+                    [ We needed a complete visual overhaul, and they exceeded expectations. 
+                    The new brand identity is not only beautiful but highly functional, 
+                    seamlessly connecting our packaging with our digital storefront. ]
+                  </blockquote>
+                  <a class="reviews__link" href="#">View the case +</a>
+                </div>
+                <div class="reviews__media">
+                  <img class="reviews__photo" src="assets/images/reviews/elena.png"
+                    width="216" height="256" alt="Elena Rostova" loading="lazy" />
+                </div>
+              </article>
+
+              <!-- Card 3 — PLACEHOLDER (David Chen name is real; quote hidden in Figma) -->
+              <article class="reviews__card" data-review-card>
+                <div class="reviews__body">
+                  <p class="reviews__role">Product manager at sync workspace</p>
+                  <h3 class="reviews__name">David Chen</h3>
+                  <blockquote class="reviews__quote">
+                    [ Their approach to our mobile productivity app was incredibly thoughtful. 
+                    The smart architecture and clean UI they designed transformed a complex utility 
+                    into a seamless, daily experience for our users. ]
+                  </blockquote>
+                  <a class="reviews__link" href="#">View the case +</a>
+                </div>
+                <div class="reviews__media">
+                  <img class="reviews__photo" src="assets/images/reviews/david.png"
+                    width="216" height="256" alt="David Chen" loading="lazy" />
+                </div>
+              </article>
+
+              <!-- Card 4 — PLACEHOLDER -->
+              <article class="reviews__card" data-review-card>
+                <div class="reviews__body">
+                  <p class="reviews__role">Co‑founder of lumiere botanicals</p>
+                  <h3 class="reviews__name">Sarah Jenkins</h3>
+                  <blockquote class="reviews__quote">
+                    [ Working with them on our e-commerce platform was a game-changer. 
+                    They deeply understood our audience, crafting an intuitive UX and 
+                    a sophisticated UI that perfectly aligns with our brand philosophy. ]
+                  </blockquote>
+                  <a class="reviews__link" href="#">View the case +</a>
+                </div>
+                <div class="reviews__media">
+                  <img class="reviews__photo" src="assets/images/reviews/sarah.png"
+                    width="216" height="256" alt="Sarah Jenkins" loading="lazy" />
+                </div>
+              </article>
+
+              <!-- Card 5 — PLACEHOLDER -->
+              <article class="reviews__card" data-review-card>
+                <div class="reviews__body">
+                  <p class="reviews__role">Marketing director at nexus cloud</p>
+                  <h3 class="reviews__name">Marcus Vance</h3>
+                  <blockquote class="reviews__quote">
+                    [ The team delivered an exceptional high-converting landing page. 
+                    They perfectly translated our complex SaaS solutions into a sleek, 
+                    user-friendly digital experience that immediately drove engagement. ]
+                  </blockquote>
+                  <a class="reviews__link" href="#">View the case +</a>
+                </div>
+                <div class="reviews__media">
+                  <img class="reviews__photo" src="assets/images/reviews/marcus.png"
+                    width="216" height="256" alt="Marcus Vance" loading="lazy" />
+                </div>
+              </article>
+            </div>
+
+            <div class="reviews__nav">
+              <button class="reviews__arrow reviews__arrow--prev" type="button"
+                data-reviews-prev aria-label="Previous review">
+                <svg class="reviews__arrow-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M14 5 7 12l7 7M7 12h11" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="square" stroke-linejoin="miter" />
+                </svg>
+              </button>
+
+              <div class="reviews__progress" data-reviews-progress role="presentation">
+                <span class="reviews__seg"></span>
+                <span class="reviews__seg"></span>
+                <span class="reviews__seg"></span>
+                <span class="reviews__seg"></span>
+                <span class="reviews__seg"></span>
+              </div>
+
+              <button class="reviews__arrow reviews__arrow--next" type="button"
+                data-reviews-next aria-label="Next review">
+                <svg class="reviews__arrow-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M10 5l7 7-7 7M17 12H6" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="square" stroke-linejoin="miter" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           Footer — Figma node 223:4137 (1440 x 1279 at frame y=10762). Pinned
+           absolutely onto slice 4 of the shared Bg-all scene (inside
+           .story-block--tail), directly below Reviews; its bottom lands exactly
+           on the wrapper bottom. It spans the light→dark split baked into
+           "Bg-all 4.png": the TOP group (headline + form + blurb) sits on the
+           light band → DARK ink; the BOTTOM group (columns + wordmark + legal)
+           sits on the black band → LIGHT text. No background-color of its own —
+           the shared city texture shows through. Carries id="contacts" so the
+           header CTA + nav "Contacts" (both href="#contacts") resolve here.
+           ==================================================================== -->
+      <footer class="footer" id="contacts" aria-labelledby="footer-title">
+        <div class="footer__inner">
+          <!-- TOP group (light band, dark ink) — "Group 10" (223:4142) -------- -->
+          <div class="footer__top" data-reveal>
+            <!-- Huge headline; brackets spaced to the section edges. -->
+            <h2 class="footer__title" id="footer-title">
+              <span class="footer__title-bracket" aria-hidden="true">[</span>
+              <span class="footer__title-lines">
+                <span class="footer__title-line">Your starting</span>
+                <span class="footer__title-line">point</span>
+              </span>
+            </h2>
+            <span class="footer__title-bracket footer__title-bracket--close" aria-hidden="true">]</span>
+
+            <!-- Subscribe form — front-end mockup only, no real submission.
+                 3 underline fields (e-mail / company / name) + dark button. -->
+            <form class="footer__form" data-footer-form>
+              <div class="footer__field">
+                <label class="footer__field-label" for="footer-email">E-mail</label>
+                <input class="footer__input" id="footer-email" type="email" name="email"
+                  autocomplete="email" placeholder=" " required />
+              </div>
+              <div class="footer__field">
+                <label class="footer__field-label" for="footer-company">Company</label>
+                <input class="footer__input" id="footer-company" type="text" name="company"
+                  autocomplete="organization" placeholder=" " required />
+              </div>
+              <div class="footer__field">
+                <label class="footer__field-label" for="footer-name">Name</label>
+                <input class="footer__input" id="footer-name" type="text" name="name"
+                  autocomplete="name" placeholder=" " required />
+              </div>
+
+              <!-- Success line. Sits above the button, on the light band, where it is
+                   actually readable; validation itself is the browser's own bubble. -->
+              <p class="footer__form-msg" id="footer-form-msg" role="status" aria-live="polite"></p>
+
+              <button class="btn btn--bracket-corners footer__submit" type="submit">
+                <span class="btn__label">Discuss your project</span>
+                <!-- arrow-up-right-01-sharp (Figma 223:4156) — 1.5px stroke, square caps. -->
+                <svg class="btn__arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M17.16 6.85 6.16 17.85" stroke="currentColor" stroke-width="1.5"
+                    stroke-linecap="square" />
+                  <path d="M11.16 5.85H18.16V12.85" stroke="currentColor" stroke-width="1.5"
+                    stroke-linecap="square" stroke-linejoin="round" />
+                </svg>
+              </button>
+
+            </form>
+
+            <!-- Blurb, right-aligned, to the right of the form. -->
+            <p class="footer__aside">Sign up to get a free brand audit and personalized plan for your first step.</p>
+          </div>
+
+          <!-- BOTTOM group (black band, light text) — "Group 11" (223:4157) --- -->
+          <div class="footer__bottom" data-reveal>
+            <div class="footer__cols">
+              <nav class="footer__col" aria-label="Footer navigation">
+                <p class="footer__col-label">Menu</p>
+                <ul class="footer__col-list">
+                  <li><a class="footer__link" href="#about">About us</a></li>
+                  <li><a class="footer__link" href="#services">Services</a></li>
+                  <li><a class="footer__link" href="#cases">Cases</a></li>
+                  <li><a class="footer__link" href="#process">Process</a></li>
+                </ul>
+              </nav>
+
+              <div class="footer__col">
+                <p class="footer__col-label">Follow us</p>
+                <ul class="footer__col-list">
+                  <li><a class="footer__link" href="#">Facebook</a></li>
+                  <li><a class="footer__link" href="#">Instagram</a></li>
+                  <li><a class="footer__link" href="#">LinkedIn</a></li>
+                  <li><a class="footer__link" href="#">Behance</a></li>
+                </ul>
+              </div>
+
+              <div class="footer__col">
+                <p class="footer__col-label">Contacts</p>
+                <ul class="footer__col-list">
+                  <li><a class="footer__link" href="mailto:hello@brandco.studio">hello@brandco.studio</a></li>
+                  <li><a class="footer__link" href="tel:+380000000000">+380 00 000 00 00</a></li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Closing block: giant hollow accent + divider + legal row, in flow
+                 so the divider always lands below the wordmark letters. -->
+            <div class="footer__closing">
+              <!-- Reuses the hero wordmark outline treatment (transparent fill + stroke).
+                   The clip box is Figma "Frame 156" (80px tall vs the wordmark's 95px cap
+                   height): it CUTS the letters off at the divider, so nothing shows below it. -->
+              <div class="footer__wordmark-clip" aria-hidden="true">
+                <span class="footer__wordmark">Brandco Studio<span class="footer__reg">R</span></span>
+              </div>
+
+              <div class="footer__divider" aria-hidden="true"></div>
+
+              <div class="footer__legal">
+                <p class="footer__legal-item">&copy; 2026 All rights reserved</p>
+                <a class="footer__legal-item footer__legal-link" href="#">Privacy policy</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div><!-- /.story-block--tail -->
+  </main>
+
+  <!-- GSAP + ScrollTrigger via CDN. Flip drives the Cases filter regroup; if it
+       fails to load the filter still works, it just switches without tweening. -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/Flip.min.js"></script>
+  <script src="js/script.js"></script>
+</body>
+</html>

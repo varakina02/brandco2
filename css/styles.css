@@ -1,0 +1,3979 @@
+/* ============================================================================
+   Brandco — Styles (DESKTOP ONLY, fixed 1440px canvas)
+
+   Every size / space is a literal px from the Figma frame "UI 3" (223:3948).
+   No vw/vh, no calc(), no clamp(), no media queries — nothing scales.
+   Colours and typography come from variables.css.
+
+   Two layers:
+     • BACKGROUND  → width: 100%            (bleeds to the screen edges)
+     • CONTENT     → width: 1440px + margin-inline: auto (fixed, centred)
+   See CLAUDE.md for the full rules.
+   ============================================================================ */
+
+/* ---- Reset ---------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* NO scroll-behavior here. The nav's in-page links still glide, but the glide
+   is applied per click in JS (initSmoothAnchors) — as a CSS property it also
+   applies to ScrollTrigger's own measuring, which jumps the page to scroll 0
+   and back, and an animated jump measures the whole document at the wrong
+   offset. See the comment on initSmoothAnchors for what that broke. */
+
+body {
+  margin: 0;
+  /* Desktop-only: the layout is a fixed 1440px canvas, so never let it squash. */
+  min-width: var(--page-width);
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-normal);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+dl,
+dd {
+  margin: 0;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* ============================================================================
+   Buttons — outlined variant (fills on hover/focus)
+   ============================================================================ */
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  padding: 0 var(--space-xl);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-button);
+  font-weight: var(--font-weight-regular);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-soft),
+    color var(--duration-fast) var(--ease-soft),
+    border-color var(--duration-fast) var(--ease-soft);
+}
+
+.btn--outline {
+  border: var(--border-width) solid var(--color-border);
+  background-color: transparent;
+  color: var(--color-text-primary);
+}
+
+.btn--outline:hover {
+  background-color: var(--color-text-primary);
+  color: var(--color-bg);
+}
+
+/* Soft-fill hover — the same treatment as the Reviews pagination arrows
+   (.reviews__arrow:hover): a faint cream tint instead of the solid invert.
+   Opt in per button; overrides .btn--outline:hover on source order. */
+.btn--tint:hover {
+  background-color: var(--color-hover-tint);
+  color: var(--color-text-primary);
+}
+
+.btn--outline:focus-visible {
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: 3px;
+}
+
+/* Contour trace — a lit segment runs around the outline on hover/focus.
+   Opt in with .btn--trace plus a <svg class="btn__trace"> holding one
+   <rect class="btn__trace-rect" pathLength="100">. The button is position:
+   relative already (.btn), and the SVG stretches to the border-box, so the
+   rect's stroke sits on the frame at any button size. */
+.btn__trace {
+  position: absolute;
+  /* Cover the BORDER box, not the padding box. An absolute child's inset:0 aligns
+     to the padding box (inside the 1px border), which floated the trace inward off
+     the frame. Pulling every side out by the border width lands the SVG's edges on
+     the border-box outer edge, so its coordinate space matches the visible frame and
+     the stroke can sit centred on the border line (see the rect's 0.5 inset). */
+  inset: calc(var(--border-width) * -1);
+  overflow: visible;          /* the 2px stroke straddles the 1px frame */
+  pointer-events: none;
+}
+
+.btn__trace-rect {
+  fill: none;
+  stroke: var(--cta-trace-color);
+  stroke-width: var(--cta-trace-width);
+  vector-effect: non-scaling-stroke;   /* keep the line crisp whatever the box size */
+  stroke-linecap: round;
+  /* One lit segment (dash) with the rest of the perimeter as gap. */
+  stroke-dasharray: var(--cta-trace-dash) var(--cta-trace-gap);
+  stroke-dashoffset: 0;
+  opacity: 0;                          /* nothing shows until hover runs the sweep */
+}
+
+/* Hover/focus plays the sweep ONCE: the segment appears at the top-left, travels
+   the whole outline clockwise, and fades out as it returns — no loop, no restart
+   flicker. `both` holds the finished (invisible) state; leaving hover removes the
+   animation so the next hover replays it. */
+.btn--trace:hover .btn__trace-rect,
+.btn--trace:focus-visible .btn__trace-rect {
+  animation: btn-trace-run var(--cta-trace-duration) linear 1 both;
+}
+
+@keyframes btn-trace-run {
+  0%   { stroke-dashoffset: 0;    opacity: 0; }
+  8%   { opacity: 1; }
+  85%  { opacity: 1; }
+  100% { stroke-dashoffset: -100; opacity: 0; }  /* one full lap, then gone */
+}
+
+/* Reduced motion: no travelling line. The button keeps its normal tint hover. */
+@media (prefers-reduced-motion: reduce) {
+  .btn--trace:hover .btn__trace-rect,
+  .btn--trace:focus-visible .btn__trace-rect {
+    animation: none;
+  }
+}
+
+.btn__arrow {
+  width: var(--icon-size);
+  height: var(--icon-size);
+  flex: none;
+  color: currentColor;
+}
+
+/* Viewfinder corner brackets — 4 L-shapes centred on the button's corners
+   (half inside the frame, half outside). Drawn as 8 solid-colour gradient
+   slices on one pseudo-element: no SVG, no extra markup, scales with any
+   button size. Reuse by adding .btn--bracket-corners to any .btn. */
+.btn--bracket-corners::before {
+  content: "";
+  position: absolute;
+  /* Sit ON the border (no overhang): the arm thickness equals the button's
+     border width, so the pseudo aligns to the border-box outer edge. Override
+     --bracket-inset to push the arms further out (Services centres 12px arms
+     on the corner, half in / half out — see .services__toggle). */
+  inset: var(--bracket-inset, -2px);
+  pointer-events: none;
+  background:
+    /* top-left corner: horizontal arm + vertical arm */
+    linear-gradient(var(--bracket-color) 0 0) top left / var(--bracket-arm) var(--bracket-thickness) no-repeat,
+    linear-gradient(var(--bracket-color) 0 0) top left / var(--bracket-thickness) var(--bracket-arm) no-repeat,
+    /* top-right */
+    linear-gradient(var(--bracket-color) 0 0) top right / var(--bracket-arm) var(--bracket-thickness) no-repeat,
+    linear-gradient(var(--bracket-color) 0 0) top right / var(--bracket-thickness) var(--bracket-arm) no-repeat,
+    /* bottom-left */
+    linear-gradient(var(--bracket-color) 0 0) bottom left / var(--bracket-arm) var(--bracket-thickness) no-repeat,
+    linear-gradient(var(--bracket-color) 0 0) bottom left / var(--bracket-thickness) var(--bracket-arm) no-repeat,
+    /* bottom-right */
+    linear-gradient(var(--bracket-color) 0 0) bottom right / var(--bracket-arm) var(--bracket-thickness) no-repeat,
+    linear-gradient(var(--bracket-color) 0 0) bottom right / var(--bracket-thickness) var(--bracket-arm) no-repeat;
+}
+
+/* ============================================================================
+   Header — Figma node 194:1198 (fixed, darkens on scroll)
+   ============================================================================ */
+.site-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 100;
+  padding-block: var(--header-offset);
+  transition: background-color var(--duration-base) var(--ease-soft),
+    box-shadow var(--duration-base) var(--ease-soft),
+    backdrop-filter var(--duration-base) var(--ease-soft),
+    padding-block var(--duration-base) var(--ease-soft);
+}
+
+.site-header.is-scrolled {
+  padding-block: var(--space-lg);
+  background-color: var(--color-bg-header);
+  box-shadow: var(--shadow-header);
+  backdrop-filter: blur(var(--blur-header));
+  -webkit-backdrop-filter: blur(var(--blur-header));
+}
+
+.site-header__inner {
+  /* Fixed 1440 canvas, centred; logo sits 80px in (Figma 223:4024). */
+  width: 1440px;
+  margin-inline: auto;
+  padding-inline: 80px;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xl);
+}
+
+.site-header__logo {
+  font-family: var(--font-display);
+  font-size: var(--font-size-logo);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-normal);
+  color: var(--color-white);
+  transition: opacity var(--duration-fast) var(--ease-soft);
+}
+
+.site-header__logo:hover {
+  opacity: 0.7;
+}
+
+.site-header__logo:focus-visible {
+  outline: 2px solid var(--color-white);
+  outline-offset: 4px;
+}
+
+/* Header CTA — fixed 191 x 48 (Figma). */
+.site-header__cta {
+  width: var(--cta-width);
+  height: var(--cta-height);
+  padding: 0;
+  flex: none;
+}
+
+/* ---- Navigation (pill container) ------------------------------------------ */
+.site-nav__list {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xl);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-pill);
+}
+
+.site-nav__link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-sm) var(--space-lg);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-nav);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-primary);
+  transition: opacity var(--duration-fast) var(--ease-soft);
+}
+
+/* Animated underline on hover / focus. */
+.site-nav__link::after {
+  content: "";
+  position: absolute;
+  left: var(--space-lg);
+  right: var(--space-lg);
+  bottom: 2px;
+  height: 1px;
+  background-color: var(--color-text-primary);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--duration-base) var(--ease-soft);
+}
+
+.site-nav__link:hover::after,
+.site-nav__link:focus-visible::after {
+  transform: scaleX(1);
+}
+
+.site-nav__link:focus-visible {
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: 2px;
+}
+
+/* ============================================================================
+   Hero — BRANDCO STUDIO® wordmark screen (Figma 224:4605)
+   ============================================================================ */
+/* Full screen wide so the scene and the ticker bar bleed edge to edge; the
+   content inside stays on the fixed 1440 canvas (see .hero__inner). */
+.hero {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  isolation: isolate;
+  background-color: var(--color-bg);
+}
+
+/* Scene wrapper — full screen wide, the Figma block height (223:3949). Clips the
+   stage overflow so the photo bleeds edge to edge on any screen. */
+.hero__scene {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 1114px;
+  z-index: -1;
+  overflow: hidden;
+}
+
+/* Stage — full screen wide, but keeps the Bg/Moon canvas ratio via aspect-ratio
+   so the moon stays perfectly round (a plain stretch would turn it into an
+   ellipse). Vertically centred; anything past the 1114px scene is clipped.
+   At 1440 the ratio resolves to exactly 1114px, i.e. the Figma block.
+   Bg and Moon both fill the stage 100% x 100%, so they map 1:1 onto the same
+   canvas and the rotating Moon stays locked over the baked-in moon. */
+.hero__stage {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  aspect-ratio: 3840 / 2971;   /* Bg.png / Moon.png canvas */
+  transform: translateY(-50%);
+  -webkit-mask-image: radial-gradient(65% 65% at var(--moon-center-x) var(--moon-center-y), #000 55%, transparent 100%);
+  mask-image: radial-gradient(65% 65% at var(--moon-center-x) var(--moon-center-y), #000 55%, transparent 100%);
+}
+
+/* Both scene images: identical method — fill the stage exactly, no distortion
+   (the stage already has the canvas aspect ratio). */
+.hero__bg,
+.hero__moon {
+  position: absolute;
+  inset: 0;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+/* Static starfield + glow (Moon rotates on top of it). */
+.hero__bg {
+  background-image: url("../assets/images/Bg.png");
+}
+
+/* Moon layer — spins in place around the moon's real centre on the canvas. */
+.hero__moon {
+  background-image: url("../assets/images/Moon.png");
+  transform-origin: var(--moon-center-x) var(--moon-center-y);
+  animation: moon-spin var(--duration-moon) linear infinite;
+  will-change: transform;
+}
+
+/* Legibility fade — covers the hero bounds (scene), above the stage but behind
+   the hero content because the whole scene sits at z-index -1. */
+.hero__overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    var(--color-overlay) 0%,
+    transparent 40%,
+    var(--color-overlay-mid) 78%,
+    var(--color-bg) 100%
+  );
+}
+
+@keyframes moon-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Figma: the hero block is 1114px tall. Wordmark starts at y=160, and the bottom
+   row (mission + CTA) ends at y=1058 → 56px of bottom padding. */
+.hero__inner {
+  width: 1440px;         /* content stays on the fixed canvas, centred */
+  margin-inline: auto;
+  height: 1114px;
+  padding: 160px 80px 56px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- Wordmark ------------------------------------------------------------- */
+.hero__wordmark {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;         /* words size to content; STUDIO right-aligns */
+  gap: 16px;                       /* Figma: BRANDCO ends y=360, STUDIO starts 376 */
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-extrabold);
+  font-size: var(--font-size-wordmark);   /* "BRANDCO" — Figma 200px */
+  line-height: var(--line-height-none);   /* Figma leading-none (1.0) */
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+}
+
+/* Both words carry the Figma double-outline (204:2414 / 204:2434): a wide white
+   stroke (rim/outline) plus a thin dark inline keyline overlaid via ::after.
+   Per-word tracking resolves in `em` (10px @200px, 8px @160px). BRANDCO is
+   filled (solid body); STUDIO is hollow (transparent body), so the same
+   treatment reads as a solid keyline vs a double-line outline. */
+/* One slot per line. It is the flex item now (the word used to be), so it takes
+   the word's place in the column — same size, same gap, same alignment. There
+   is NO clipping here at rest: initHeroReveal applies a clip-path to the slot
+   only for the length of the entrance and removes it after, so the rim stroke
+   and the ® badge are never cut once the wordmark is in place. */
+.hero__line {
+  display: block;
+}
+
+/* STUDIO right-aligns; that used to live on .hero__word--outline. */
+.hero__line--end {
+  align-self: flex-end;
+}
+
+.hero__word {
+  display: block;        /* was a flex item (blockified); keep it block so a transform applies */
+  position: relative;
+  letter-spacing: var(--tracking-wordmark);
+  -webkit-text-stroke: var(--wordmark-rim-stroke) var(--color-text-primary);
+}
+
+.hero__word::after {
+  content: attr(data-text);
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: transparent;
+  -webkit-text-stroke: var(--wordmark-keyline-stroke) var(--color-bg);
+  pointer-events: none;
+}
+
+/* "STUDIO" — smaller (Figma 160px), FILLED white like BRANDCO (same double
+   outline: white body + dark keyline + white rim). Its right-alignment is on
+   the slot (.hero__line--end) now that the slot is the flex item. */
+.hero__word--outline {
+  font-size: var(--font-size-wordmark-studio);
+}
+
+/* ® badge next to STUDIO (Figma 225:4648): an 85px circle containing an
+   OUTLINED "R" — both hollow (transparent fill, 2px white stroke). All sizes
+   are em of the badge's own font-size (the R glyph) so it scales with STUDIO. */
+.hero__reg,
+.footer__reg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.4em;                    /* R glyph — Figma 64px (of STUDIO 160) */
+  width: 1.33em;                       /* circle — Figma 85px (85/64)          */
+  height: 1.33em;
+  margin-left: var(--space-sm);        /* 8px gap after "STUDIO"               */
+  vertical-align: 0.95em;              /* raise so it sits near the cap-top     */
+  border: var(--stroke-bold) solid var(--color-text-primary);
+  border-radius: 50%;
+  line-height: 1;
+  letter-spacing: normal;
+  color: transparent;                  /* R: hollow                            */
+  -webkit-text-stroke: var(--stroke-bold) var(--color-text-primary);
+}
+
+/* ---- Bottom row: mission (left) + CTA (right) ----------------------------- */
+.hero__bottom {
+  margin-top: auto;      /* pinned to the bottom of the 1114px hero block */
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 64px;
+}
+
+.hero__mission {
+  width: 405px;          /* Figma 223:3978 */
+  display: flex;
+  flex-direction: column;
+  gap: 24px;             /* Figma: label ends y=23, text starts y=47 */
+}
+
+.hero__mission-label {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-label);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-primary);
+}
+
+.hero__mission-text {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-snug);
+  color: var(--color-text-muted);
+}
+
+/* Hero CTA — larger dark button (Figma 296 x 64). */
+.btn--hero {
+  width: var(--hero-cta-width);       /* Figma 296px */
+  min-height: var(--hero-cta-height);
+  padding: var(--space-lg) var(--space-xl);
+  gap: var(--hero-cta-gap);           /* Figma 10px text ↔ arrow */
+  border-width: var(--stroke-bold);   /* Figma 2px border */
+  border-color: var(--color-border-muted);
+  background-color: var(--color-bg);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-label);
+  letter-spacing: normal;             /* Figma button text has no tracking */
+}
+
+/* Same inversion as the footer's submit (.footer__submit:hover): solid brand
+   white ground with ink text. The border takes the FILL colour, so the frame
+   reads as one clean white block and only the bracket legs stay dark. */
+.btn--hero:hover {
+  background-color: var(--color-text-primary);
+  color: var(--color-bg);
+  border-color: var(--color-text-primary);
+  --bracket-color: var(--color-bg);
+}
+
+/* ---- Ticker bar ----------------------------------------------------------- */
+/* Figma 223:3960: a 55px tall bar (borders included). The 56px gap above it is
+   the hero block's bottom padding, so no margin here. */
+.hero__ticker {
+  height: 55px;
+  display: flex;
+  align-items: center;
+  border-top: 1px solid var(--color-ticker-border);
+  border-bottom: 1px solid var(--color-ticker-border);
+  overflow: hidden;                     /* clip the scrolling track */
+}
+
+/* Marquee track — THREE identical groups in a row; the loop scrolls left by
+   exactly one group (-100%/3). Three (not two) copies so that after the shift the
+   remaining track still overruns the viewport — otherwise a viewport wider than a
+   single group shows a blank gap once one copy has scrolled past. */
+.ticker {
+  display: flex;
+  width: max-content;
+  animation: ticker-scroll var(--duration-ticker) linear infinite;
+  font-family: var(--font-mono);
+  font-size: 18px;
+  line-height: normal;   /* Figma: 18px text in a 23px box */
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-muted);
+}
+
+.ticker__group {
+  display: flex;
+  align-items: center;
+  gap: 40px;                 /* Figma 40px between items */
+  padding-left: 40px;        /* leading + inter-group gap → uniform rhythm */
+  margin: 0;
+  flex: none;
+}
+
+@keyframes ticker-scroll {
+  to {
+    transform: translateX(-33.3333%);   /* exactly one of the three groups */
+  }
+}
+
+.ticker__item {
+  display: flex;
+  align-items: center;
+  gap: 40px;                 /* Figma: dot ends x=116, text starts x=156 */
+  white-space: nowrap;
+}
+
+.ticker__dot {
+  width: var(--dot-size);
+  height: var(--dot-size);
+  flex: none;
+  border-radius: 50%;
+  background-color: var(--color-text-muted);
+}
+
+/* ============================================================================
+   Story block — shared background wrapper for About → Footer (Figma "Bg-all"
+   260:2728). One continuous scene sits behind every section in this group.
+
+   The Figma frame is 1440 x 10872. The background is 4 stacked slices (see
+   .story-block__bg) whose summed height drives the wrapper — so it is sized by
+   the picture, NOT by its content. Each section inside is position:absolute at
+   its Figma y-offset. Everything is fixed px, so nothing shifts.
+   ============================================================================ */
+/* The wrapper spans the FULL screen so the background art is never letterboxed;
+   the sections inside stay on the fixed 1440 canvas (see .about). */
+.story-block {
+  position: relative;
+  width: 100%;
+  background-color: var(--color-bg);   /* shows only if a slice fails to load */
+}
+
+/* The 4 background slices, in normal flow. Images are display:block (see the img
+   reset), so they stack edge-to-edge with no inline-whitespace gap; line-height:0
+   is a belt-and-suspenders guard. This in-flow layer gives .story-block its full
+   height, and the absolute-positioned sections paint on top of it. */
+.story-block__bg {
+  line-height: 0;
+}
+
+/* Each slice stretches to the full screen width but keeps its EXACT Figma height,
+   so the bands stay at their designed y-positions and the four heights still sum
+   to 10872px whatever the screen width. object-fit:fill stretches horizontally
+   only — invisible on this soft, horizontally-banded texture (a `cover` would
+   crop vertically and shift the bands). */
+.story-block__bg-part {
+  width: 100%;
+  object-fit: fill;
+}
+
+/* Keyed by an explicit modifier, NOT nth-of-type: the slices now live in two
+   separate wrappers (head = 1, tail = 3 + 4) with Cases in flow between them,
+   so a positional selector would hand slice 3 the height meant for slice 1.
+   Slice 2 is retired — Cases paints that band itself (see .cases). */
+.story-block__bg-part--1 { height: 2681px; }
+.story-block__bg-part--3 { height: 1322px; }
+.story-block__bg-part--4 { height: 3889px; }
+
+/* ============================================================================
+   About + Stats — Figma node 194:1222 (top of Bg-all: y offset 0, height 11.16%)
+   ============================================================================ */
+/* Content stays on the fixed 1440 canvas, centred over the full-width background. */
+.about {
+  position: absolute;
+  top: 0;                /* About top aligns with the Bg-all top (Figma y=1169) */
+  left: 0;
+  right: 0;
+  width: 1440px;
+  margin-inline: auto;
+}
+
+/* Figma 223:4047: 1440 x 1213 — 160px top, 80px sides, 80px bottom. */
+.about__inner {
+  padding: 160px 80px 377px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;   /* Figma right-aligns the intro + stats groups */
+  gap: 64px;               /* Container_Text ends 659 → Gruop_Stats 723 */
+}
+
+.about__intro {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 64px;               /* Title ends 320 → Desc 384 */
+}
+
+.about__title {
+  margin: 0;
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 32px;               /* label ↔ headline */
+}
+
+.about__label {
+  flex: none;
+  width: 187px;
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: var(--font-weight-regular);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-muted);
+}
+
+.about__headline {
+  flex: 1;
+  font-family: var(--font-display);
+  font-size: 80px;
+  font-weight: var(--font-weight-extrabold);
+  line-height: var(--line-height-none);   /* Figma leading-none → 4×80 = 320px */
+  text-indent: 100px;      /* first line only — the indent after "[ About us ]" */
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+}
+
+/* Two 405/404 columns inside 951 → space-between resolves to the Figma 142px. */
+.about__desc {
+  width: 951px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.about__desc-col {
+  margin: 0;
+  width: 405px;
+  font-family: var(--font-mono);
+  font-size: 18px;
+  line-height: var(--line-height-snug);
+  color: var(--color-text-muted);
+}
+
+.about__stats {
+  width: 952px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 144px;
+  row-gap: 64px;
+}
+
+.stat {
+  /* Figma 223:4056: number + label stack with NO gap — the space under the
+     number is its own line-height (leading-normal), not a separate gap. */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.stat__value {
+  /* Flex row so the prefix / rolling counter / suffix share one vertical centre
+     (the rolling digits are centred in their columns, so centre-align — not
+     baseline — keeps "+" and "%" level with them). */
+  display: flex;
+  align-items: center;
+  font-family: var(--font-display);
+  font-size: 120px;
+  /* Figma spec is Bold (700), but the free PP Neue Montreal has no 700 face —
+     use the real Extrabold (800) instead of a synthesized weight. */
+  font-weight: var(--font-weight-extrabold);
+  line-height: normal;   /* Figma 223:4057 leading-normal → ~144px box @120px */
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Rolling odometer counter (built by js/script.js) --------------------- */
+.rc {
+  display: flex;
+}
+
+/* One digit place: a 1em-tall window that clips the 0–9 stack. The mask softens
+   the top/bottom edges (the reference's gradient), and works over the textured
+   background because it fades to transparent rather than to a solid colour. */
+.rc__col {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 12%, #000 88%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 12%, #000 88%, transparent 100%);
+}
+
+/* Hidden glyph reserves each column's width (1 tabular digit) + height (1em). */
+.rc__col::before {
+  content: "0";
+  visibility: hidden;
+}
+
+/* Each digit fills the column; translateY (in % of its own height) rolls it. */
+.rc__digit {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  will-change: transform;
+}
+
+.stat__label {
+  font-family: var(--font-sans);
+  font-size: 24px;
+  font-weight: var(--font-weight-regular);
+  line-height: normal;   /* Figma 223:4059 leading-normal → ~29px box @24px */
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-primary);
+}
+
+/* ============================================================================
+   Services — Figma node 223:3981 (1440 x 1171 at frame y=2679)
+
+   This is the first section on the LIGHT band of the Bg-all scene, so every
+   text colour is inverted vs. Hero/About: --color-ink on light, --color-ink-muted
+   for labels and copy. No background of its own — the light band is part of
+   .story-block__bg.
+   ============================================================================ */
+.services {
+  position: absolute;
+  top: 1510px;           /* Figma y=2679 − story-block start 1169             */
+  left: 0;
+  right: 0;
+  width: 1440px;
+  margin-inline: auto;
+}
+
+/* Figma 223:3981: 80px padding all round, 64px between title and accordion. */
+.services__inner {
+  padding: 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 64px;
+}
+
+/* ---- Section title (223:3984) --------------------------------------------- */
+.services__title {
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 32px;             /* label ↔ headline */
+}
+
+.services__label {
+  flex: none;
+  width: 187px;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-regular);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-ink-muted);
+}
+
+.services__headline {
+  flex: 1;
+  font-family: var(--font-display);
+  font-size: var(--font-size-headline);
+  font-weight: var(--font-weight-extrabold);
+  line-height: var(--line-height-none);   /* leading-none → 2 × 80 = 160px */
+  text-transform: uppercase;
+  color: var(--color-ink);
+}
+
+/* Two hard lines, as in the mockup — nowrap keeps the block at exactly 2 × 80. */
+.services__headline-line {
+  display: block;
+  white-space: nowrap;
+}
+
+/* Figma encodes the 2nd line's offset as 13 leading spaces; measured against the
+   real PP Neue Montreal Extrabold @80px that advance is 191px (13 × 14.72). */
+.services__headline-line--indent {
+  padding-left: 191px;
+}
+
+/* ---- Accordion (223:3985) -------------------------------------------------
+   Figma stacks 7 hairline dividers around 6 items with a 32px gap on each side.
+   Reproduced as a border-top per item (+ one closing border-bottom on the list)
+   with 32px padding-block — so item ↔ item reads 32 + 1 + 32, exactly as designed. */
+.services__list {
+  border-bottom: var(--border-width) solid var(--color-divider);
+}
+
+.services__item {
+  position: relative;   /* anchors the service image (see .services__thumb) */
+  border-top: var(--border-width) solid var(--color-divider);
+  padding-block: 32px;
+}
+
+/* The image overhangs the rows below it, so lift the expanded item above them. */
+.services__item.is-open {
+  z-index: 1;
+}
+
+/* The whole row is the toggle — a real <button>, so Enter/Space work for free. */
+.services__row {
+  width: 100%;
+  height: 48px;          /* Figma collapsed row height = the button size */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+}
+
+.services__row:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 4px;
+}
+
+.services__heading {
+  margin: 0;
+  font-weight: inherit;
+}
+
+.services__name {
+  width: 581px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.services__num {
+  flex: none;
+  width: 77px;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-ink-muted);
+}
+
+.services__caption {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Dot goes solid ink on the open item, muted on the collapsed ones. */
+.services__dot {
+  flex: none;
+  width: var(--dot-size);
+  height: var(--dot-size);
+  border-radius: 50%;
+  background-color: var(--color-ink-muted);
+  transition: background-color var(--duration-fast) var(--ease-soft);
+}
+
+.services__item.is-open .services__dot {
+  background-color: var(--color-ink);
+}
+
+.services__service {
+  font-family: var(--font-display);
+  font-size: var(--font-size-service);
+  font-weight: var(--font-weight-extrabold);
+  line-height: normal;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--color-ink);
+}
+
+/* ---- Toggle — reuses the shared .btn--bracket-corners ----------------------
+   Figma 163:886 (collapsed): a faint frame plus four dark 6px corner arms whose
+   outer corner sits on the frame's outer edge. The frame's 2px stroke is drawn
+   OUTSIDE the 48px box (Figma outer size 52, layout box still 48), so it is an
+   `outline`, not a border — which also makes the bracket geometry identical to
+   the hero CTA's, i.e. the shared defaults need no override but the colour. */
+.services__toggle {
+  --bracket-color: var(--color-ink);
+  flex: none;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  outline: 2px solid var(--color-toggle-border);
+  transition: outline-color var(--duration-base) var(--ease-soft);
+}
+
+/* Open (Figma 163:1107): the frame closes into a solid dark outline and the
+   corner arms drop away entirely. */
+.services__item.is-open .services__toggle {
+  outline-color: var(--color-ink);
+}
+
+.services__toggle::before {
+  transition: opacity var(--duration-base) var(--ease-soft);
+}
+
+.services__item.is-open .services__toggle::before {
+  opacity: 0;
+}
+
+/* The icon: two 24 x 2 bars. It lives on a child because the toggle's own
+   ::before is already spent on the corner brackets. */
+.services__plus {
+  position: relative;
+  width: 24px;
+  height: 24px;
+}
+
+.services__plus::before,
+.services__plus::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  background-color: var(--color-ink);
+}
+
+/* Horizontal bar — the only part that changes: "+" when collapsed, gone when
+   open, leaving the bare vertical bar the mockup shows. It scales out from the
+   centre so the change reads as motion, not a hard swap. */
+.services__plus::before {
+  width: 24px;
+  height: 2px;
+  margin: -1px 0 0 -12px;
+  transition: transform var(--duration-base) var(--ease-soft),
+    opacity var(--duration-base) var(--ease-soft);
+}
+
+.services__plus::after {
+  width: 2px;
+  height: 24px;
+  margin: -12px 0 0 -1px;
+}
+
+.services__item.is-open .services__plus::before {
+  transform: scaleX(0);
+  opacity: 0;
+}
+
+/* ---- Expanding panel ------------------------------------------------------
+   Collapsed by default; GSAP tweens the height. overflow flips to visible once
+   a panel is fully open so the rotated thumbnail can overhang the row and the
+   divider below it, exactly as in the mockup. */
+.services__panel {
+  height: 0;
+  overflow: hidden;
+}
+
+.services__panel-inner {
+  position: relative;
+  padding: 24px 0 0 109px;   /* 24 = Figma gap row ↔ desc; 109 = desc indent */
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.services__desc {
+  margin: 0;
+  width: 408px;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-body-sm);
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-snug);   /* Figma 21px per line @16px → 4 lines = 84 */
+  color: var(--color-ink-muted);
+}
+
+.services__tags {
+  display: flex;
+  gap: 16px;
+}
+
+/* Shared pill — Figma uses the same component for the accordion tags and for the
+   category badge overlaid on a case card, so the two share one rule. */
+.services__tag,
+.cases__tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding-inline: 24px;
+  background-color: var(--color-tag-bg);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-tag);
+  font-weight: var(--font-weight-regular);
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--color-ink);
+}
+
+/* ---- Per-service image ----------------------------------------------------
+   Figma places a 234 square rotated 6.84° inside the EXPANDED item's Desc row:
+   its 260.197 bounding box sits at left 604 / top -50 there, which resolves to
+   left 617 / top 35 from the row's top edge — hence top 67 once this item's
+   32px padding is added. Anchored to the item (not the collapsing panel) so a
+   collapsed row can show it on hover too.
+
+   Visibility is CSS-only, driven by .is-open: the image belongs to the expanded
+   row. Collapsed rows keep it hidden. Anchoring it to the item rather than the
+   panel keeps it clear of the panel's overflow while the height animates. */
+.services__thumb {
+  --thumb-angle: 6.84deg;
+  position: absolute;
+  top: 67px;
+  left: 617px;
+  z-index: 1;
+  width: 234px;
+  height: 234px;
+  object-fit: cover;
+  opacity: 0;
+  /* Rests flat and slightly small; the open state turns it to the mockup's
+     angle, so it settles into place instead of popping in. */
+  transform: rotate(0deg) scale(0.92);
+  pointer-events: none;
+  /* Collapsing: fades straight out, no delay — it must not linger over the
+     row while the panel closes underneath it. */
+  transition: opacity var(--duration-fast) var(--ease-soft),
+    transform var(--duration-fast) var(--ease-soft);
+}
+
+/* Opening: held back until the panel has finished expanding, then settles in. */
+.services__item.is-open .services__thumb {
+  opacity: 1;
+  transform: rotate(var(--thumb-angle)) scale(1);
+  transition: opacity var(--duration-thumb) var(--ease-soft) var(--delay-thumb),
+    transform var(--duration-thumb) var(--ease-soft) var(--delay-thumb);
+}
+
+/* ============================================================================
+   Cases — Figma node 194:1244 (1440 x 2980 at frame y=3850)
+
+   A DARK band, so the colours return to the Hero/About set — no --color-ink.
+
+   ELASTIC SECTION — the one section that is NOT absolutely positioned on the
+   shared Bg-all scene. It used to sit on slice 2, which pinned it to a 2980px
+   band: filtering the grid down to one card left the rest of that band as dead
+   black space. Slice 2 turned out to be a flat fill (mean rgb(16.3), std 1.1,
+   no gradient), so it is reproduced here as --color-bg-cases and the section
+   returned to normal flow — its height is now whatever its cards need.
+
+   Two layers as per CLAUDE.md: this element is the full-width BACKGROUND,
+   .cases__inner is the fixed 1440 CONTENT.
+   ============================================================================ */
+.cases {
+  width: 100%;
+  background-color: var(--color-bg-cases);
+}
+
+/* Figma 194:1244: 160 top / 80 sides / 80 bottom, 64 between head and body.
+   160 + 293 + 64 + 2383 + 80 = 2980 — the frame height, exactly, when every
+   card is shown. With a filter applied the body (and so the section) is
+   shorter, which is the point. */
+.cases__inner {
+  width: 1440px;
+  margin-inline: auto;
+  padding: 160px 80px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 64px;
+}
+
+/* ---- Section head (194:1246) — title, then the thesis under its right edge - */
+.cases__head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 64px;
+}
+
+.cases__title {
+  margin: 0;
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 32px;             /* label ↔ headline */
+}
+
+.cases__label {
+  flex: none;
+  width: 187px;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-regular);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-muted);
+}
+
+.cases__headline {
+  flex: 1;
+  font-family: var(--font-display);
+  font-size: var(--font-size-headline);
+  font-weight: var(--font-weight-extrabold);
+  line-height: var(--line-height-none);   /* leading-none → 2 × 80 = 160px */
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+}
+
+/* Two hard lines, as in Services — nowrap pins the block at exactly 2 × 80. */
+.cases__headline-line {
+  display: block;
+  white-space: nowrap;
+}
+
+/* Figma encodes the 1st line's offset as 7 leading spaces; at PP Neue Montreal
+   Extrabold 80px that advance is 103px (7 × 14.72 — the same per-space value the
+   Services headline's 13 spaces resolve to). */
+.cases__headline-line--indent {
+  padding-left: 103px;
+}
+
+/* Figma 194:1248 — 299 wide, right-aligned, sitting under the headline's end. */
+.cases__thesis {
+  margin: 0;
+  width: 299px;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
+  line-height: normal;   /* Figma leading-normal → 3 lines × 23 = 69px */
+  text-align: right;
+  color: var(--color-text-muted);
+}
+
+/* ---- Body (194:1249): filter row, 32px gap, grid ------------------------- */
+.cases__body {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* ---- Category filters (194:1250) ----------------------------------------- */
+.cases__filters {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Figma draws the 1px stroke INSIDE the pill (a "Identity" chip is 130 wide =
+   82 text + 2 × 24 padding, with no room for a border box), so the outline is an
+   inset box-shadow rather than a border — a real border would push every chip
+   2px wider and the row 10px past its designed 728. Same reasoning as the
+   `outline` on .services__toggle. */
+.cases__filter {
+  height: 48px;
+  padding-inline: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: none;
+  box-shadow: inset 0 0 0 var(--border-width) var(--color-border-muted);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-regular);
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-soft),
+    box-shadow var(--duration-fast) var(--ease-soft),
+    color var(--duration-fast) var(--ease-soft);
+}
+
+.cases__filter:hover {
+  box-shadow: inset 0 0 0 var(--border-width) var(--color-text-primary);
+  color: var(--color-text-primary);
+}
+
+/* Active (Figma 194:1251): the outline is dropped for a solid light fill. */
+.cases__filter.is-active {
+  background-color: var(--color-text-primary);
+  box-shadow: none;
+  color: var(--color-bg);
+}
+
+.cases__filter:focus-visible {
+  outline: 2px solid var(--color-text-primary);
+  outline-offset: 4px;
+}
+
+/* ---- The grid (194:1261) --------------------------------------------------
+   Figma nests the cards in three "Grop_Case" frames; we don't, because fixed
+   groups can't regroup when a filter removes a card. One flex-wrap row of 1280
+   with a 32px gap reproduces the mockup exactly on its own:
+
+     row 1  515 + 32 + 733 = 1280 (full)  → the next card wraps
+     row 2  405 + 32 + 405 + 32 + 405 = 1279
+     row 3  515 + 32 + 733 = 1280
+
+   and with align-items:flex-start the rows come out 853 / 533 / 853, so the
+   total is 853 + 32 + 533 + 32 + 853 = 2303 — the Figma height. */
+.cases__grid {
+  position: relative;   /* anchor for the cards Flip lifts out of flow */
+  /* Keep the browser's scroll anchoring out of the grid: while a filter tweens
+     this box between two heights it would pick a card as its anchor node and
+     fight initCases's own scroll pin, frame by frame. */
+  overflow-anchor: none;
+  width: 1280px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  /* Pack the wrapped ROWS to the top as well. initCases tweens an explicit
+     height on this box, and the default align-content shares any spare height
+     out between the flex lines — so while that tween ran, row 2 sat hundreds of
+     px lower than it belongs, Flip measured THAT as each card's destination,
+     and the cards snapped back into place the moment Flip returned them to
+     flow. At the natural height there is no spare space, so this changes
+     nothing about the resting layout. */
+  align-content: flex-start;
+  gap: 32px;
+  /* Only ever clips while initCases tweens this box between two natural
+     heights; at rest the cards fit it exactly. */
+  overflow: hidden;
+}
+
+/* ---- Card (component 139:240) -------------------------------------------- */
+.cases__card {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;             /* image ↔ caption */
+  /* Never let a card compress to fit the box. initCases tweens an explicit
+     height on the grid, and on mobile that grid is a flex COLUMN — so while the
+     tween ran, every card squashed to fit, Flip measured those squashed
+     positions as each card's destination, and they snapped back out at the end.
+     The rows already fit their track exactly, so nothing shrinks at rest and
+     this changes no size anywhere. */
+  flex-shrink: 0;
+}
+
+/* Hidden by the category filter. */
+.cases__card.is-filtered-out {
+  display: none;
+}
+
+/* Width per size variant; the media height goes with it. */
+.cases__card--md { width: 515px; }
+.cases__card--lg { width: 733px; }
+.cases__card--sm { width: 405px; }
+
+/* overflow:hidden is what clips the hover zoom to the frame. Figma radius is 0. */
+.cases__media {
+  position: relative;
+  overflow: hidden;
+}
+
+.cases__card--md .cases__media { height: 515px; }
+.cases__card--lg .cases__media { height: 800px; }
+.cases__card--sm .cases__media { height: 480px; }
+.cases__card--sm.cases__card--short .cases__media { height: 320px; }
+
+/* Absolute + inset:0 lets the image fill its fixed-px frame without any fluid
+   sizing; object-fit does the cropping Figma applies per instance.
+
+   The sources are the COLOUR originals: the mockup's black-and-white look is a
+   filter applied here, so hovering can bring the colour back in step with the
+   zoom. (Figma's own exports are baked greyscale and could not be un-desaturated,
+   so the colour files came from the designer.) */
+.cases__img {
+  position: absolute;
+  inset: 0;
+  object-fit: cover;
+  transform: scale(1);
+  filter: grayscale(1);
+  transition: transform var(--duration-zoom) var(--ease-soft),
+    filter var(--duration-zoom) var(--ease-soft);
+}
+
+.cases__media--bottom .cases__img {
+  object-position: bottom;
+}
+
+/* NOTE: Figma puts a dark mix-blend-overlay layer over the Synapse image
+   (I194:1268;139:263). It is deliberately NOT reproduced — it was compensating
+   for that baked-greyscale export, and over the colour source it would tint the
+   hover reveal instead of letting the real colours through. */
+
+.cases__card:hover .cases__img,
+.cases__card:focus-within .cases__img {
+  transform: scale(var(--scale-case-hover));
+  filter: grayscale(0);
+}
+
+/* ---- Category badges — hidden until the card is hovered ------------------- */
+.cases__tags {
+  position: absolute;
+  left: 32px;
+  top: 32px;
+  z-index: 1;            /* above the --dim blend layer */
+  display: flex;
+  gap: 16px;
+  opacity: 0;
+  transition: opacity var(--duration-base) var(--ease-soft);
+}
+
+.cases__card:hover .cases__tags,
+.cases__card:focus-within .cases__tags {
+  opacity: 1;
+}
+
+/* ---- Caption (139:122) ---------------------------------------------------- */
+.cases__name {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.cases__project,
+.cases__year {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--font-size-case-name);
+  /* Figma spec is Bold (700); the free PP Neue Montreal has no 700 face, so use
+     the real Extrabold — same substitution as .stat__value. */
+  font-weight: var(--font-weight-extrabold);
+  line-height: normal;   /* Figma leading-normal → 29px box @24px */
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.cases__project {
+  color: var(--color-case-name);
+}
+
+.cases__year {
+  color: var(--color-case-year);
+}
+
+/* ============================================================================
+   Process — Figma node 223:3999 (1440 x 1322 at frame y=6830)
+
+   Static (always 4 steps), so it sits absolutely on slice 3 of the shared
+   Bg-all scene (inside .story-block--tail), exactly as About sits on the head
+   slice. LIGHT band → dark ink, same inverted palette as Services.
+   ============================================================================ */
+.process {
+  position: absolute;
+  top: 0;                /* fills slice 3 from its top (Figma y=6830) */
+  left: 0;
+  right: 0;
+  width: 1440px;
+  margin-inline: auto;
+}
+
+/* Figma 223:3999: 160px top, 80px sides, 80px bottom; 64px title ↔ steps. */
+.process__inner {
+  padding: 160px 80px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 64px;
+}
+
+/* ---- Section title (223:4001) — same shape as About / Services ------------ */
+.process__title {
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 32px;             /* label ↔ headline */
+}
+
+.process__label {
+  flex: none;
+  width: 187px;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-regular);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-ink-muted);
+}
+
+.process__headline {
+  flex: 1;
+  font-family: var(--font-display);
+  font-size: var(--font-size-headline);
+  font-weight: var(--font-weight-extrabold);
+  line-height: var(--line-height-none);   /* leading-none → 2 × 80 = 160px */
+  text-transform: uppercase;
+  color: var(--color-ink);
+}
+
+/* Two hard lines; nowrap keeps the block at exactly 2 × 80. */
+.process__headline-line {
+  display: block;
+  white-space: nowrap;
+}
+
+/* Figma encodes the 2nd line's offset as 23 leading spaces (see the token). */
+.process__headline-line--indent {
+  padding-left: var(--process-headline-indent);
+}
+
+/* ---- Steps (Group_Process 223:4002) — chequerboard zigzag ----------------
+   Uniform 32px between steps; the staircase read comes from the L/R alternation
+   plus each block's own height, NOT from uneven vertical gaps. */
+.process__steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xl);   /* 32px between steps */
+}
+
+.process__step {
+  display: flex;
+}
+
+/* 01 / 03 sit at the left edge; 02 / 04 sit as a 405px block inset from the
+   right (Figma right edge lands at 1170 inside the 1280 field → 110px inset). */
+.process__step--left {
+  justify-content: flex-start;
+}
+
+.process__step--right {
+  justify-content: flex-end;
+  padding-right: var(--process-step-inset);
+}
+
+.process__block {
+  width: var(--about-col-width);   /* 405px */
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);            /* 16px name ↔ desc */
+}
+
+.process__name {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);            /* 24px number ↔ heading */
+}
+
+.process__num,
+.process__heading {
+  margin: 0;
+  text-transform: uppercase;
+  line-height: var(--line-height-none);
+  color: var(--color-ink);
+}
+
+.process__num {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-body-sm);   /* 16px */
+  font-weight: var(--font-weight-regular);
+}
+
+.process__heading {
+  font-family: var(--font-display);
+  font-size: var(--font-size-service);   /* 32px */
+  font-weight: var(--font-weight-extrabold);
+}
+
+.process__desc {
+  margin: 0;
+  width: var(--about-col-width);   /* 405px */
+  font-family: var(--font-mono);
+  font-size: var(--font-size-body-sm);   /* 16px */
+  /* Figma "leading-normal" on this mono copy renders ~1.3 (105px / 5 lines =
+     21px @16px); snug matches it, same as the About description. */
+  line-height: var(--line-height-snug);
+  color: var(--color-ink-muted);
+}
+
+/* ============================================================================
+   Team — Figma node 223:4097 (1440 x 1574 at frame y=8152)
+
+   Static (always 6 members), so it sits absolutely on slice 4 of the shared
+   Bg-all scene (inside .story-block--tail), directly below Process. Back on the
+   DARK band → the Hero/About/Cases light-on-dark palette (no --color-ink set).
+   ============================================================================ */
+.team {
+  position: absolute;
+  top: 1322px;           /* slice-4 top: Figma y=8152 − tail origin 6830 = 1322 */
+  left: 0;
+  right: 0;
+  width: 1440px;
+  margin-inline: auto;
+}
+
+/* Figma 223:4097: 160px top/bottom, 80px sides; 64px title ↔ grid; the grid is
+   right-aligned under a full-width title (Figma "items-end"). */
+.team__inner {
+  padding: var(--space-section-top) var(--space-gutter);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-3xl);   /* 64px title ↔ grid */
+}
+
+/* ---- Section title — same shape as About / Services / Process ------------- */
+.team__title {
+  margin: 0;
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2xl);   /* 32px label ↔ headline */
+}
+
+.team__label {
+  flex: none;
+  width: var(--about-label-width);   /* 187px */
+  font-family: var(--font-mono);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-regular);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-muted);
+}
+
+.team__headline {
+  flex: 1;
+  font-family: var(--font-display);
+  font-size: var(--font-size-headline);
+  font-weight: var(--font-weight-extrabold);
+  line-height: var(--line-height-none);   /* leading-none → 2 × 80 = 160px */
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+}
+
+/* Two hard lines; nowrap keeps the block at exactly 2 × 80. */
+.team__headline-line {
+  display: block;
+  white-space: nowrap;
+}
+
+/* Unlike Services/Process (2nd line indented), Team indents the 1st line —
+   Figma encodes it as 8 leading spaces (see the token). */
+.team__headline-line--indent {
+  padding-left: var(--team-headline-indent);
+}
+
+/* ---- Grid (Frame 151) — 3 x 2, right-aligned ----------------------------- */
+.team__grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: var(--team-grid-width);   /* 952px */
+  display: grid;
+  grid-template-columns: repeat(3, var(--team-card-width));
+  gap: var(--space-2xl);           /* 32px both axes */
+}
+
+.team__card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);            /* 24px photo ↔ info */
+}
+
+/* overflow:hidden clips the hover zoom to the frame; the #2a2a2a fill shows
+   through until the photo loads (matches Figma's "Bg" rect behind each photo). */
+.team__media {
+  position: relative;
+  width: var(--team-card-width);      /* 296px */
+  height: var(--team-photo-height);   /* 320px */
+  overflow: hidden;
+  background-color: var(--color-ticker-border);   /* #2a2a2a */
+}
+
+/* Absolute + inset:0 fills the fixed-px frame; object-fit crops. The mockup
+   photos are black-and-white, so grayscale is baked here and STAYS on hover —
+   only the zoom animates (unlike Cases, which also brings colour back). */
+.team__photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: bottom;
+  filter: grayscale(1);
+  transform: scale(1);
+  transition: transform var(--duration-zoom) var(--ease-soft);
+}
+
+.team__card:hover .team__photo,
+.team__card:focus-within .team__photo {
+  transform: scale(var(--scale-case-hover));   /* 1.05, same as Cases */
+}
+
+/* ---- Info (name / role / bio) -------------------------------------------- */
+.team__info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);            /* 16px name-group ↔ bio */
+}
+
+.team__name-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);            /* 8px name ↔ role */
+}
+
+.team__name,
+.team__role {
+  margin: 0;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.team__name {
+  font-family: var(--font-display);
+  font-size: var(--font-size-case-name);   /* 24px */
+  /* Figma spec is Bold (700); the free PP Neue Montreal has no 700 face, so use
+     the real Extrabold — same substitution as .cases__project / .stat__value. */
+  font-weight: var(--font-weight-extrabold);
+  line-height: var(--line-height-none);
+  color: var(--color-case-name);           /* #e5e5e0 */
+}
+
+.team__role {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-tag);         /* 14px */
+  font-weight: var(--font-weight-regular);
+  line-height: normal;
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-muted);          /* #8f8f8f */
+}
+
+.team__bio {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-body-sm);     /* 16px */
+  font-weight: var(--font-weight-regular);
+  /* Same mono multi-line copy as Process descriptions → snug (~1.3). */
+  line-height: var(--line-height-snug);
+  color: var(--color-case-name);           /* #e5e5e0 */
+}
+
+/* ============================================================================
+   Reviews — Figma node 223:4108 (1440 x 1035 at frame y=9727). Sits absolutely
+   on slice 4 of the shared Bg-all scene (inside .story-block--tail), directly
+   below Team. DARK band → the Hero/About/Team light-on-dark palette. FIXED
+   height (the stacked-card carousel swaps cards in place), so — like Team — it
+   is pinned to the background instead of living in normal flow.
+   ============================================================================ */
+.reviews {
+  position: absolute;
+  top: var(--reviews-top);   /* Figma y=9727 − tail origin 6830 = 2897 */
+  left: 0;
+  right: 0;
+  width: var(--page-width);
+  margin-inline: auto;
+}
+
+/* Hairline across the very top of the Reviews band — Figma "Line 3" (223:4111)
+   runs the full frame width; here it goes FULL SCREEN, edge to edge, like the
+   background slices behind it.
+
+   It hangs off the WRAPPER, not off .reviews: .reviews is the centred 1440px
+   canvas, so a line inside it could never be wider than 1440. .story-block--tail
+   is width:100% of the page, so 'left:0; right:0' here IS the full screen — no
+   vw needed (vw would break this desktop-only layout, whose body has a 1440px
+   min-width, and would overflow by the scrollbar's width on wide screens).
+   ::after, not ::before, so it paints ON TOP of the background slices. */
+.story-block--tail::after {
+  content: "";
+  position: absolute;
+  top: var(--reviews-top);
+  left: 0;
+  right: 0;
+  height: var(--border-width);
+  background-color: var(--color-divider);   /* #2a2a2a */
+}
+
+.reviews__inner {
+  padding: var(--space-section-top) var(--space-gutter);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xl);   /* 64px title ↔ carousel */
+}
+
+/* ---- Section title — same shape as About / Team / Process ----------------- */
+.reviews__title {
+  margin: 0;
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2xl);   /* 32px label ↔ headline */
+}
+
+.reviews__label {
+  flex: none;
+  width: var(--about-label-width);   /* 187px */
+  font-family: var(--font-mono);
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-regular);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-muted);
+}
+
+.reviews__headline {
+  flex: 1;
+  font-family: var(--font-display);
+  font-size: var(--font-size-headline);
+  font-weight: var(--font-weight-extrabold);
+  line-height: var(--line-height-none);
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+}
+
+.reviews__headline-line {
+  display: block;
+  white-space: nowrap;
+}
+
+/* 2nd line indented (like Services/Process), unlike Team's 1st-line indent. */
+.reviews__headline-line--indent {
+  padding-left: var(--reviews-headline-indent);
+}
+
+/* ---- Carousel: stacked cards + bottom nav -------------------------------- */
+.reviews__carousel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3xl);   /* 64px stack ↔ nav */
+}
+
+/* Fixed stage that holds the fanned stack; cards are overlaid inside it and
+   positioned by JS (see initReviews). Front card is anchored bottom-centre and
+   deeper cards fan up-and-right from there. */
+.reviews__stack {
+  position: relative;
+  width: var(--review-stack-width);
+  height: var(--review-stack-height);
+}
+
+.reviews__card {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  margin-left: calc(var(--review-card-width) / -2);   /* centre horizontally */
+  width: var(--review-card-width);
+  height: var(--review-card-height);
+  display: flex;
+  gap: var(--space-2xl);
+  padding: var(--review-card-pad);
+  background-color: var(--color-review-card);
+  color: var(--color-ink);
+  transform-origin: center center;
+
+  /* The card's resting pose. script.js writes ONLY these three variables (plus
+     z-index / background-color) per slot; every movement below is a CSS
+     transition between those values — no per-frame JS. --rx/--ry are the exact
+     Figma offsets, --rot the tilt. */
+  --rx: 0px;
+  --ry: 0px;
+  --rot: 0deg;
+  transform: translate(var(--rx), var(--ry)) rotate(var(--rot));
+  box-shadow: var(--shadow-review-card);
+  transition:
+    transform var(--review-shift-duration) var(--ease-deal),
+    background-color var(--review-shift-duration) var(--ease-deal),
+    box-shadow var(--review-shift-duration) var(--ease-deal),
+    opacity var(--review-shift-duration) var(--ease-deal);
+}
+
+/* The card being shuffled carries a deeper shadow for the whole trip, so it
+   reads as lifted off the deck rather than sliding around inside it. */
+.reviews__card.is-lifting,
+.reviews__card.is-settling {
+  box-shadow: var(--shadow-review-move);
+}
+
+/* ---- Shuffle phase 1: the back card is pulled UP out from behind the deck --
+   JS has already rewritten --rx/--ry/--rot to the FRONT slot and raised z-index
+   inline (z-index is not transitionable), so the card rises straight up over the
+   stack — no lateral drift, no tilt — and waits directly above the front slot. */
+.reviews__card.is-lifting {
+  transform:
+    translate(var(--rx), calc(var(--ry) + var(--review-lift-y)))
+    rotate(0deg)
+    scale(var(--review-lift-scale));
+  transition:
+    transform var(--review-lift-duration) var(--ease-lift),
+    background-color var(--review-lift-duration) var(--ease-lift),
+    box-shadow var(--review-lift-duration) var(--ease-lift);
+}
+
+/* ---- Shuffle phase 2: it comes straight DOWN onto the front slot ----------
+   Dropping .is-lifting leaves the card's own --rx/--ry (already the front slot),
+   so it descends top-to-bottom into place on this slower, softer curve. */
+.reviews__card.is-settling {
+  transition:
+    transform var(--review-settle-duration) var(--ease-deal),
+    background-color var(--review-settle-duration) var(--ease-deal),
+    box-shadow var(--review-settle-duration) var(--ease-deal);
+}
+
+/* ---- Scroll-in deal: cards start as a flat pile, pushed below their slot --- */
+.reviews__card.is-pre-deal {
+  opacity: 0;
+  transform:
+    translate(var(--rx), calc(var(--ry) + var(--review-deal-y)))
+    rotate(0deg)
+    scale(var(--review-deal-scale));
+  transition: none;   /* the start pose is placed instantly, never animated */
+}
+
+/* Dealing: each card carries its own inline transition-delay for the stagger.
+   A card that is mid-shuffle is excluded — otherwise this rule (higher
+   specificity) would hijack the lift/settle timings, and its missing
+   background-color entry would snap the grey→cream fade. */
+.reviews__stack.is-dealing .reviews__card:not(.is-lifting):not(.is-settling) {
+  transition:
+    transform var(--review-deal-duration) var(--ease-deal),
+    opacity var(--review-deal-duration) var(--ease-deal);
+}
+
+.reviews__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.reviews__role {
+  margin: 0 0 var(--space-md);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-tag);         /* 14px */
+  font-weight: var(--font-weight-regular);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-ink-muted);
+}
+
+.reviews__name {
+  margin: 0 0 var(--space-xl);
+  font-family: var(--font-display);
+  font-size: var(--font-size-service);     /* 32px */
+  font-weight: var(--font-weight-extrabold);
+  line-height: var(--line-height-none);
+  text-transform: uppercase;
+  color: var(--color-ink);
+}
+
+.reviews__quote {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-body-sm);     /* 16px */
+  font-weight: var(--font-weight-regular);
+  line-height: var(--line-height-snug);
+  color: var(--color-ink);
+}
+
+/* Pinned to the bottom-left of the card, below the quote. */
+.reviews__link {
+  position: relative;
+  margin-top: auto;
+  align-self: flex-start;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-body-sm);     /* 16px */
+  font-weight: var(--font-weight-regular);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+/* The underline is a pseudo-element instead of text-decoration so it can be
+   animated: full width at rest, it wipes out towards the RIGHT on hover and
+   redraws from the LEFT on leave (transform-origin flips instantly — it is
+   deliberately not in the transition list). Same mechanism as
+   .site-nav__link::after. */
+.reviews__link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: var(--review-link-underline-bottom);
+  height: var(--border-width);
+  background-color: currentColor;
+  transform: scaleX(1);
+  transform-origin: left;
+  transition: transform var(--duration-base) var(--ease-soft);
+}
+
+.reviews__link:hover::after,
+.reviews__link:focus-visible::after {
+  transform: scaleX(0);
+  transform-origin: right;
+}
+
+/* Portrait on the right — #2a2a2a fill shows until the photo loads / while the
+   real files are still to be supplied (same trick as .team__media). */
+.reviews__media {
+  flex: none;
+  width: var(--review-photo-width);        /* 216px */
+  height: var(--review-photo-height);      /* 256px */
+  overflow: hidden;
+  background-color: var(--color-ticker-border);   /* #2a2a2a */
+}
+
+.reviews__photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(1);
+}
+
+/* ---- Bottom nav: prev · progress · next ---------------------------------- */
+.reviews__nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xl);
+}
+
+.reviews__arrow {
+  flex: none;
+  width: var(--review-arrow-size);         /* 48px */
+  height: var(--review-arrow-size);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: var(--border-width) solid var(--color-border-muted);
+  background-color: transparent;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-soft),
+              border-color var(--duration-fast) var(--ease-soft);
+}
+
+.reviews__arrow:hover {
+  border-color: var(--color-text-primary);
+  background-color: var(--color-hover-tint);
+}
+
+.reviews__arrow-icon {
+  width: var(--icon-size);                 /* 24px */
+  height: var(--icon-size);
+}
+
+.reviews__progress {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+/* Inactive positions are 12px dots; the active one grows into an 80px pill.
+   flex:none so the pill keeps its width instead of being shrunk back by the row. */
+.reviews__seg {
+  flex: none;
+  width: var(--dot-size);                  /* 12px */
+  height: var(--dot-size);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-text-muted);
+  transition: width var(--duration-base) var(--ease-soft),
+              background-color var(--duration-base) var(--ease-soft);
+}
+
+.reviews__seg.is-active {
+  width: var(--review-seg-active-width);   /* 80px */
+  background-color: var(--color-text-primary);
+}
+
+/* ============================================================================
+   Footer — Figma node 223:4137 (1440 x 1279 at frame y=10762). Pinned absolutely
+   onto slice 4 of the shared Bg-all scene (inside .story-block--tail), directly
+   below Reviews; its bottom meets the wrapper bottom exactly. NO background of its
+   own — the baked light→black city texture shows through. Children are positioned
+   at their exact Figma offsets (fixed 1440 canvas). The TOP group sits on the
+   light band → dark ink; the BOTTOM group on the black band → light text.
+   ============================================================================ */
+.footer {
+  position: absolute;
+  top: 3932px;             /* Figma frame y=10762 − tail origin 6830 */
+  left: 0;
+  right: 0;
+  width: var(--page-width);
+  height: 1279px;          /* Figma footer height — reaches the wrapper bottom */
+  margin-inline: auto;
+}
+
+.footer__inner {
+  position: relative;
+  height: 100%;
+}
+
+/* Starfield canvas — lives in .story-block--tail so it can go full-bleed (see
+   the comment on the element in index.html). Sized to the dark part of the band
+   only; the mask fades it in from nothing across the top --footer-stars-fade so
+   the exact light->dark boundary never has to be pixel-perfect.
+
+   Deliberately absent from the prefers-reduced-motion block below: every bit of
+   motion happens INSIDE the canvas, driven by rAF, so there is no CSS animation
+   or transform here to switch off. The fallback is the useMotion:false branch of
+   initFooterStars(), which paints one static frame and starts no loop. */
+.footer__stars {
+  position: absolute;
+  top: var(--footer-stars-top);
+  left: 0;
+  /* An explicit width, NOT 'right: 0'. <canvas> is a replaced element, so an
+     absolutely positioned one with width:auto takes its intrinsic 300x150 ratio
+     and ignores 'right' as over-constrained — it would come out 978px wide.
+     .story-block__bg-part sets width:100% on the <img> slices for the same
+     reason. 100% of .story-block--tail is the full screen. */
+  width: 100%;
+  height: var(--footer-stars-height);
+  /* Decorative, and it lies over the column links — stay out of their clicks. */
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--footer-stars-fade));
+  mask-image: linear-gradient(to bottom, transparent 0, #000 var(--footer-stars-fade));
+}
+
+/* ---- TOP group (light band → dark ink) — Figma "Group 10" (79,160) -------- */
+.footer__top {
+  position: absolute;
+  left: var(--space-gutter);   /* 80px */
+  top: var(--space-section-top);   /* 160px */
+  width: 1280px;
+  height: 376px;
+  color: var(--color-ink);
+}
+
+/* Headline "[  YOUR STARTING POINT" — brackets pushed to the section edges. */
+.footer__title {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 952px;
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 96px;   /* space between "[" and the wrapped words (Figma leading spaces) */
+}
+
+.footer__title-bracket {
+  font-family: var(--font-display);
+  font-size: var(--font-size-headline);   /* 80px */
+  font-weight: var(--font-weight-extrabold);
+  line-height: var(--line-height-none);
+  color: var(--color-ink);
+}
+
+.footer__title-bracket--close {
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.footer__title-lines {
+  font-family: var(--font-display);
+  font-size: var(--font-size-headline);
+  font-weight: var(--font-weight-extrabold);
+  line-height: var(--line-height-none);
+  text-transform: uppercase;
+  color: var(--color-ink);
+}
+
+.footer__title-line {
+  display: block;
+  white-space: nowrap;
+}
+
+/* ---- Subscribe form (mockup) — centred, 3 underline fields + dark button --- */
+.footer__form {
+  position: absolute;
+  left: 437px;   /* Figma x=516 − group origin 79 */
+  top: 144px;    /* Figma y=304 − group origin 160 */
+  width: var(--footer-form-width);   /* 406px */
+  display: flex;
+  flex-direction: column;
+}
+
+.footer__field {
+  position: relative;   /* anchor for the floating label + the error line */
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding-bottom: var(--space-xs);
+  border-bottom: var(--border-width) solid var(--color-ink-muted);
+}
+
+.footer__field + .footer__field {
+  margin-top: var(--space-lg);   /* Figma field pitch (~56px total) */
+}
+
+.footer__field-label {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-body-sm);   /* 16px */
+  font-weight: var(--font-weight-regular);
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+  /* Acts as the placeholder: parked on the input's text line at rest, floats up
+     to its Figma position on focus / when the field holds a value. It stays in
+     flow (only transformed), so the field height never changes. */
+  transform: translate(var(--footer-label-rest-x), var(--footer-label-rest-y));
+  pointer-events: none;   /* clicks fall through to the input and set the caret */
+  transition: transform var(--duration-fast) var(--ease-soft);
+}
+
+/* Two separate rules on purpose: an unsupported :has() would invalidate a
+   combined selector list and take the :focus-within case down with it. */
+.footer__field:focus-within .footer__field-label {
+  transform: translate(0, 0);
+}
+
+/* "Has a value" test — the inputs carry placeholder=" " so :placeholder-shown
+   is true only while they are empty. Also covers browser autofill. */
+.footer__field:has(.footer__input:not(:placeholder-shown)) .footer__field-label {
+  transform: translate(0, 0);
+}
+
+.footer__input {
+  width: 100%;
+  border: none;
+  background-color: transparent;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-body-sm);
+  line-height: var(--line-height-snug);
+  color: var(--color-ink);
+}
+
+.footer__input:focus-visible {
+  outline: none;
+}
+
+/* Dark filled button (bg #0d0d0d on the light band) — reuses .btn geometry and
+   the default .btn--bracket-corners (6px arms, −2px inset), which matches the
+   Figma "Angle" corner marks (6px legs, 2px thick, sitting half-outside). */
+.footer__submit {
+  align-self: flex-end;
+  margin-top: var(--space-2xl);   /* 32px below the last field */
+  width: var(--hero-cta-width);   /* 296px */
+  height: var(--hero-cta-height); /* 64px  */
+  gap: var(--hero-cta-gap);       /* 10px  */
+  padding: var(--space-lg) var(--space-xl);
+  background-color: var(--color-ink);
+  color: var(--color-text-primary);
+  border: var(--stroke-bold) solid var(--color-footer-btn-border);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-label);   /* 18px */
+  --bracket-color: var(--color-text-primary);   /* light legs on the dark button */
+}
+
+/* Inverts on hover: the dark ground flips to the brand white with ink text, and
+   the border takes the FILL colour so no dark outline breaks up the block — the
+   bracket legs alone stay dark. Deliberately a solid fill, not the transparent
+   one this used to have, which let the dark band swallow the whole button. */
+.footer__submit:hover {
+  background-color: var(--color-text-primary);
+  color: var(--color-ink);
+  border-color: var(--color-text-primary);
+  --bracket-color: var(--color-ink);
+}
+
+.footer__submit:focus-visible {
+  outline: 2px solid var(--color-text-primary);   /* cream: the ink outline was lost on the dark band */
+  outline-offset: 3px;
+}
+
+/* Success line only. Absolutely placed in the 32px gap above the button, on the
+   LIGHT band — the old spot under the button fell on the black band and was
+   unreadable. Out of flow, so the button never moves when the line appears or
+   clears itself. */
+.footer__form-msg {
+  position: absolute;
+  left: 0;
+  bottom: calc(var(--hero-cta-height) + var(--space-sm));   /* 8px above the button */
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-body-sm);
+  color: var(--color-ink-muted);
+}
+
+/* Blurb — right-aligned, to the right of the form. */
+.footer__aside {
+  position: absolute;
+  right: 0;
+  top: 144px;    /* Figma y=304 − group origin 160 */
+  width: var(--footer-aside-width);   /* 296px */
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-label);   /* 18px */
+  line-height: var(--line-height-normal);
+  color: var(--color-ink-muted);
+  text-align: right;
+}
+
+/* ---- BOTTOM group (black band → light text) — Figma "Group 11" (79,826) --- */
+.footer__bottom {
+  position: absolute;
+  left: var(--space-gutter);   /* 80px */
+  top: 826px;
+  width: 1280px;
+  height: 421px;
+  color: var(--color-text-primary);
+}
+
+.footer__cols {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  gap: var(--footer-col-gap);   /* 196px */
+}
+
+.footer__col {
+  width: var(--footer-col-width);   /* 296px */
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);   /* 24px heading ↔ list */
+}
+
+.footer__col-label {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-label);   /* 18px */
+  font-weight: var(--font-weight-regular);
+  text-transform: uppercase;
+  color: var(--color-text-muted);   /* #8f8f8f */
+}
+
+.footer__col-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);   /* 16px between links */
+}
+
+.footer__link {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-body-sm);   /* 16px */
+  text-transform: uppercase;
+  color: var(--color-text-primary);   /* #f5f5f0 */
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-soft);
+}
+
+.footer__link:hover {
+  color: var(--color-text-muted);
+}
+
+/* Closing block — Figma "Group 13" (391:2615), frame y=1085. Each piece is pinned
+   to its exact Figma offset rather than flowed: in the design the full-bleed divider
+   deliberately CROSSES the wordmark's lower third (divider y=1165 sits 74px below the
+   cap-top but 21px above the baseline at y=1186), which a flow layout cannot express. */
+.footer__closing {
+  position: absolute;
+  left: 0;
+  top: 259px;   /* Figma y=1085 − group origin 826 */
+  width: 100%;
+}
+
+/* Figma "Frame 156" (223:4177) is 80px tall while the 133px wordmark inside has a
+   ~95px cap height — the frame CLIPS it. So the letters are cut off flush with the
+   divider (y=1165) and nothing of them shows below the line. overflow:hidden also
+   makes this a BFC, so the wordmark's margin-top applies inside instead of collapsing. */
+.footer__wordmark-clip {
+  position: absolute;
+  /* Opens 60px ABOVE the caps so the box never shaves the tops of the letters or
+     the ® circle; only its bottom edge matters, and that lands on the divider
+     (y=1165) to catch the round letters' baseline overshoot. */
+  top: -60px;
+  left: 0;
+  width: 100%;
+  height: 140px;   /* bottom edge = the divider */
+  overflow: hidden;
+  /* Purely decorative, and its top edge now overlaps the last row of column links —
+     stay out of the way of their clicks. */
+  pointer-events: none;
+}
+
+/* Giant hollow accent "BRANDCO STUDIO®" — reuses the hero wordmark outline
+   treatment (transparent fill + -webkit-text-stroke), see .hero__word / .hero__reg. */
+.footer__wordmark {
+  display: block;
+  font-family: var(--font-display);
+  font-size: var(--font-size-footer-wordmark);   /* 133px */
+  font-weight: var(--font-weight-extrabold);
+  line-height: var(--line-height-none);
+  letter-spacing: normal;   /* Figma: no tracking (letters ~1200 + ® at the end) */
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: transparent;
+  -webkit-text-stroke: var(--stroke-bold) var(--color-text-primary);   /* 2px — the wordmark outline */
+  /* Sits the wordmark ON the divider: the baseline lands exactly on the cut line
+     (y=1165), so nothing shows below it and — since these caps have no descenders —
+     no part of a letter is lost. The ® badge is cap-aligned, so it follows. */
+  margin-top: 43.5px;   /* = −16.5 rebased onto the clip box's new 60px-higher top */
+}
+
+/* ® badge — Figma 223:4179: 64px circle + hollow 48px "R" (reuses .hero__reg,
+   just resized: 0.36em of the 133px wordmark ≈ 48px, badge 1.33em ≈ 64px).
+   vertical-align lifts the badge top to the wordmark cap-top (Figma both at y=6). */
+.footer__reg {
+  font-size: 0.36em;
+  vertical-align: 1.45em;
+  margin-left: 5px;   /* lands the badge on Figma x=1288 */
+}
+
+/* Full-bleed hairline — Figma "Divider" (223:4141) spans the whole 1440 frame and
+   crosses the wordmark's lower third. Painted after the wordmark, as in Figma. */
+.footer__divider {
+  position: absolute;
+  top: 80px;    /* Figma y=1165 − group y=1085 */
+  left: calc(-1 * var(--space-gutter));   /* bleed back to the frame edge */
+  width: var(--page-width);   /* 1440px */
+  height: var(--border-width);
+  background-color: var(--color-divider);   /* #2a2a2a */
+}
+
+.footer__legal {
+  position: absolute;
+  top: 144px;   /* Figma y=1229 − group y=1085 */
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-xl);
+}
+
+.footer__legal-item {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-tag);   /* 14px */
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+
+.footer__legal-link {
+  transition: color var(--duration-fast) var(--ease-soft);
+}
+
+.footer__legal-link:hover {
+  color: var(--color-text-muted);
+}
+
+/* ============================================================================
+   Motion / progressive enhancement
+   ============================================================================ */
+
+/* Pre-hide reveal targets ONLY when JS is present AND motion is allowed, so
+   content never gets stuck hidden if JS/GSAP fails or motion is reduced.
+   Opacity only — GSAP sets the translateY start via gsap.set() and animates to 0.
+   A CSS translateY here would be re-exposed by the tween's clearProps at the end,
+   snapping every element back down 40px (visible "jump" + pushes the bottom ticker
+   off-screen), so it must NOT live in CSS. */
+@media (prefers-reduced-motion: no-preference) {
+  .has-js [data-animate],
+  .has-js [data-reveal] {
+    opacity: 0;
+    will-change: opacity, transform;
+  }
+
+  /* The hero wordmark's two words — initHeroReveal slides each up out of its
+     slot on load. Hidden until then so they never flash in place first. */
+  .has-js [data-hero-word] {
+    opacity: 0;
+    will-change: transform;
+  }
+
+  /* Each stat block is revealed individually (staggered) by initStats — pre-hide
+     them so they never flash before the scroll trigger fires. */
+  .has-js [data-stats] .stat {
+    opacity: 0;
+    will-change: opacity, transform;
+  }
+
+  /* Same deal for the accordion rows — initServices staggers them in. */
+  .has-js [data-accordion] .services__item {
+    opacity: 0;
+    will-change: opacity, transform;
+  }
+
+  /* And the case cards — initCases batches them in, row by row. */
+  .has-js [data-cases-grid] .cases__card {
+    opacity: 0;
+    will-change: opacity, transform;
+  }
+
+  /* Team cards — initTeam staggers them in when the grid scrolls into view. */
+  .has-js [data-team-grid] .team__card {
+    opacity: 0;
+    will-change: opacity, transform;
+  }
+
+  /* Review cards — dealt in one by one by initReviews when the stack scrolls into
+     view. Hidden from first paint until the deal starts (JS then marks the
+     carousel .is-revealed), so they never flash before their turn. */
+  .has-js [data-reviews]:not(.is-revealed) .reviews__card {
+    opacity: 0;
+  }
+
+  .has-js [data-reviews] .reviews__card {
+    will-change: opacity, transform;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    /* Kill delays too, or a held-back reveal (--delay-thumb) still waits. */
+    transition-delay: 0s !important;
+    animation-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Moon and ticker stay still. */
+  .hero__moon,
+  .ticker {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
+/* No responsive breakpoints — this is a desktop-only, fixed 1440px layout. */
+
+/* ============================================================================
+   Mobile navigation — NEW elements (Figma 434:1753)
+
+   These four rules are the ONLY additions that live outside a media query.
+   They exist because a brand-new element has no sensible default: without
+   `display: none` the burger and its panel would render on desktop. No
+   existing desktop rule is touched, and nothing here changes what the
+   approved 1440px layout paints.
+   ============================================================================ */
+/* Figma's hand-made break inside the mobile "Motion / design" name. A brand-new
+   element again, so it needs a default: desktop keeps that name on one nowrap
+   line, and only the mobile block below turns the break back on. The space that
+   holds the two words apart lives BEFORE the <br> (as it does in Figma), so
+   desktop still reads "MOTION DESIGN"; on mobile it is a trailing space at a
+   forced break and white-space processing drops it, leaving "DESIGN" at x=0. */
+.services__break {
+  display: none;
+}
+
+.site-header__burger,
+.site-nav-panel {
+  display: none;
+}
+
+/* ============================================================================
+   TABLET — 768px … 1439px
+   ============================================================================ */
+@media (min-width: 768px) and (max-width: 1439px) {
+  /* TODO — tablet adaptation is a separate stage. */
+}
+
+/* ============================================================================
+   MOBILE — up to 767px. Figma "iPhone 11 Pro / X - 3" (434:1746).
+
+   FOUNDATION ONLY: page shell, header/burger and the shared container rule.
+   Individual sections still carry their desktop fixed widths and will overflow
+   until each one is adapted in its own pass.
+   ============================================================================ */
+@media (max-width: 767px) {
+  /* ---- Page shell ------------------------------------------------------ */
+  /* The desktop rule pins the body to a 1440px canvas (`min-width:
+     var(--page-width)`), which would make every mobile layout impossible.
+     Released here only — the base declaration is left exactly as it is. */
+  body {
+    min-width: 0;
+  }
+
+  /* ---- Canvas layer ----------------------------------------------------
+     Every section is drawn on a hardcoded 1440px canvas. Left alone, the
+     document stays 1440px wide, the layout viewport inflates to match, and
+     the fixed header is dragged off-screen with it — so nothing mobile can
+     be judged at all. Releasing just the CANVAS width is page plumbing, not
+     section design: no type, no spacing and no positioning is touched here.
+
+     The inner blocks (951 / 952 / 1280px columns, grids, cards) still carry
+     their desktop widths and WILL overflow until each section is adapted.
+     Sections also remain position:absolute on the shared Bg-all slices —
+     unpinning waits on the background decision.
+     -------------------------------------------------------------------- */
+  .site-header__inner,
+  .hero__inner,
+  .about,
+  .services,
+  .cases,
+  .process,
+  .team,
+  .reviews,
+  .footer {
+    width: 100%;
+  }
+
+  /* The Bg-all slices are 1920px exports forced to 100% width; cap them so
+     they cannot re-introduce the horizontal overflow. */
+  .story-block__bg-part {
+    max-width: 100%;
+  }
+
+  /* ---- Horizontal-overflow guard --------------------------------------
+     On mobile the layout viewport EXPANDS to fit overflowing content, so a
+     single un-adapted 952px grid drags the whole initial containing block out
+     to 1440px — taking the fixed header with it and putting the burger off
+     screen. Clipping the three top-level scene wrappers keeps the ICB at the
+     real 375px, so each section can be adapted and judged on its own.
+
+     `clip` rather than `hidden` on purpose: it does not create a scroll
+     container, so nothing inside loses position:sticky. Measured before/after:
+     ICB 1440 → 375, and the burger's right edge lands on 359 = 375 − 16.
+
+     Keep this after the sections are done — the finished mobile design never
+     scrolls sideways — but be aware it also hides accidental overflow while
+     that work is in progress. Remove it temporarily if a section looks cropped.
+     -------------------------------------------------------------------- */
+  .hero,
+  .story-block,
+  .cases {
+    overflow-x: clip;
+  }
+
+  /* Mobile is the one place the layout is FLUID rather than a fixed canvas:
+     real phones run 360–430px, so a hard 375px would leave dead bands or
+     force a sideways scroll. Content tracks the viewport minus the 16px
+     gutter, which reproduces Figma's 343px content width exactly at 375. */
+  .site-header__inner {
+    width: 100%;
+    padding-inline: var(--space-gutter);
+    gap: 0;
+    align-items: flex-start;   /* Figma 442:2402 — items-start */
+  }
+
+  /* ---- Header ---------------------------------------------------------- */
+  .site-header__logo {
+    font-size: var(--font-size-logo);
+    display: inline-flex;
+    align-items: center;
+    height: var(--header-height);
+  }
+
+  /* Figma keeps the ® at its desktop size while BRANDCO drops to 18px. */
+  .site-header__logo-reg {
+    font-size: var(--font-size-logo-reg);
+  }
+
+  /* The desktop nav and CTA are replaced by the burger. */
+  .site-nav,
+  .site-header__cta {
+    display: none;
+  }
+
+  /* ---- Burger (Figma 434:1753 → 434:1754) ------------------------------ */
+  .site-header__burger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--burger-size);
+    height: var(--burger-size);
+    padding: var(--burger-pad);
+    flex: none;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .site-header__burger:focus-visible {
+    outline: 2px solid var(--color-text-primary);
+    outline-offset: 2px;
+  }
+
+  /* 32x32 icon box — the bars are positioned inside it exactly as drawn. */
+  .site-header__burger-icon {
+    position: relative;
+    width: var(--burger-icon-size);
+    height: var(--burger-icon-size);
+    /* Figma centres a 32px icon box inside a 48px button that also has 12px
+       padding, so the box overflows the padding by 4px a side. Without
+       flex:none the flex parent squashes it to 24px and the bars — which are
+       positioned from the box's left edge — land 4px right of centre. */
+    flex: none;
+  }
+
+  .site-header__burger-icon::before,
+  .site-header__burger-icon::after {
+    content: "";
+    position: absolute;
+    left: var(--burger-bar-inset);
+    width: var(--burger-bar-width);
+    height: var(--burger-bar-height);
+    background-color: var(--burger-bar-color);
+    transition: transform var(--duration-base) var(--ease-soft),
+      opacity var(--duration-base) var(--ease-soft);
+  }
+
+  .site-header__burger-icon::before {
+    top: var(--burger-bar-top-1);
+  }
+
+  .site-header__burger-icon::after {
+    top: var(--burger-bar-top-2);
+  }
+
+  /* Open state: the two bars cross. Figma draws only the closed mark, so this
+     is the minimal reading of it — no new shape, just the drawn bars rotated. */
+  .site-header__burger[aria-expanded="true"] .site-header__burger-icon::before {
+    transform: translateY(3px) rotate(45deg);
+  }
+
+  .site-header__burger[aria-expanded="true"] .site-header__burger-icon::after {
+    transform: translateY(-3px) rotate(-45deg);
+  }
+
+  /* ---- Menu panel — PROVISIONAL ---------------------------------------
+     Figma frame 442:2402 draws the burger BUTTON but no open state anywhere
+     in 434:1746, so there is no drawn panel to copy. This is a deliberately
+     plain sheet built from the existing nav links and mobile tokens, so the
+     button is not a dead control. Replace it once the open state is designed.
+     -------------------------------------------------------------------- */
+  .site-nav-panel {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    padding: calc(var(--header-offset) + var(--header-height) + var(--space-2xl))
+      var(--space-gutter) var(--space-gutter);
+    background-color: var(--color-bg);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: opacity var(--duration-base) var(--ease-soft),
+      transform var(--duration-base) var(--ease-soft),
+      visibility 0s linear var(--duration-base);
+  }
+
+  .site-nav-panel.is-open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    transition-delay: 0s;
+  }
+
+  .site-nav-panel__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+  }
+
+  .site-nav-panel__link {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-headline);
+    font-weight: var(--font-weight-regular);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wide);
+    color: var(--color-text-primary);
+  }
+
+  /* Body scroll lock while the panel is up. */
+  body.has-nav-open {
+    overflow: hidden;
+  }
+
+  /* ---- Hero / Main (Figma "Main" 442:2404) -----------------------------
+     Same structure as desktop — wordmark, mission, CTA, ticker — so only the
+     box sizes and the bottom row's direction change. Every value comes from a
+     mobile token in variables.css; the derivations live there.
+
+     NOT overridden because Figma measures them IDENTICAL to desktop: the whole
+     ticker bar (55px, 18px mono, 40px gaps, 12px dot), the mission label and
+     body (both 18px mono, 24px apart), and the CTA's padding, gap, arrow and
+     corner brackets.
+
+     Known 5.6px: .hero__mission-label inherits line-height 1.5, so its box is
+     27px where Figma draws 23. That is a DESKTOP trait (identical there), so it
+     is left alone here — it only shows up as the bottom block starting at 551
+     instead of 557. The block is bottom-pinned, so nothing below it moves.
+     -------------------------------------------------------------------- */
+  .hero__scene {
+    height: var(--hero-scene-height);
+  }
+
+  /* The desktop stage is full-width and vertically centred; mobile crops it to
+     a fixed spot instead, so the moon lands exactly where Figma draws it. */
+  .hero__stage {
+    width: var(--hero-stage-width);
+    left: var(--hero-stage-left);
+    top: var(--hero-stage-top);
+    transform: none;               /* drops the desktop translateY(-50%) */
+  }
+
+  .hero__inner {
+    height: var(--hero-scene-height);
+    padding: var(--hero-pad-top) var(--space-gutter) var(--hero-pad-bottom);
+  }
+
+  /* Shrink-to-fit so BRANDCO defines the block width and STUDIO's existing
+     align-self:flex-end lands on BRANDCO's right edge — which is what Figma
+     draws, and what keeps the pair together once the capped font-size stops
+     growing on a phone wider than 375. */
+  .hero__wordmark {
+    width: fit-content;
+  }
+
+  /* Figma draws the badge with a 0.756px stroke and almost no gap after the
+     word; 1px is the nearest real hairline. Scoped to .hero__reg so the shared
+     desktop rule leaves .footer__reg for the footer's own pass. */
+  .hero__reg {
+    margin-left: var(--space-xs);
+    border-width: var(--border-width);
+    -webkit-text-stroke-width: var(--border-width);
+  }
+
+  /* Desktop puts mission and CTA side by side; mobile stacks them, the CTA
+     right-aligned under the text (Figma 434:1778 — flex-col, items-end). */
+  .hero__bottom {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--space-2xl);
+  }
+
+  .hero__mission {
+    width: 100%;                   /* desktop 405px */
+  }
+
+  /* Figma's "Size3" frame is a FIXED 260 x 48 — its 16px block padding is
+     overridden by that height (24px arrow + 2 x 16 padding + 2 x 2 border
+     would be 60). Height instead of min-height, and the block padding goes,
+     so the row centres itself inside the drawn box. */
+  .btn--hero {
+    height: var(--hero-cta-height);
+    padding-block: 0;
+    font-size: var(--font-size-button);
+  }
+
+  /* ---- About (Figma "About" 434:1821 — 375 x 1784) ---------------------
+     The mobile STRUCTURE differs from desktop, so it wins over a scaled-down
+     desktop: the label sits ABOVE the headline instead of beside it, the two
+     desc paragraphs stack, and the 2x2 stats grid becomes a single column.
+
+     NOT overridden because Figma measures them IDENTICAL to desktop: the mono
+     label (18px, 187px wide), the desc copy (18px mono, leading 1.3 — Figma's
+     leading-normal resolves to the same 23px line) and the stat label (24px).
+     The stat NUMBER does differ — see .stat__value below.
+     -------------------------------------------------------------------- */
+
+  /* Unpin the head wrapper. On desktop .about and .services are absolute at
+     fixed y-offsets on the 2681px "Bg-all 1-3" slice, which also supplies the
+     wrapper's height. Mobile has NO Bg-all (each Figma section owns a private
+     Bg), and About's real mobile height is ~1784px — so the desktop offsets
+     put Services straight through the bottom of About. Both sections go back
+     into normal flow and the art becomes a pure backdrop.
+
+     z-index:-1 is load-bearing: at `auto` the positioned backdrop would paint
+     ABOVE the in-flow section text. Negative z-index puts it behind the
+     content but still in front of .story-block's own background-color. */
+  .story-block__bg {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+  }
+
+  /* With the layer absolute, the slice no longer drives the wrapper height —
+     it stretches over whatever the content comes to instead. */
+  .story-block__bg-part--1 {
+    height: 100%;
+  }
+
+  /* ---- Tail wrapper: keep its slices IN FLOW (for now) -----------------
+     The rule above lifts the background layer out of flow, which is right for
+     the HEAD wrapper because About and Services have been unpinned and now
+     give it its height. The TAIL wrapper's sections (Process, Team, Reviews,
+     Footer) are still position:absolute, so lifting its slices out of flow
+     left nothing in flow at all: .story-block--tail collapsed to height 0
+     while its content still ran to ~12113px, so the document ended at 6902px
+     and everything below Cases became unreachable by scrolling.
+
+     Until those four are unpinned, the tail keeps the desktop arrangement —
+     slices in flow driving the height, absolute sections painting on top.
+     Delete this rule at the same moment the last tail section goes static.
+     -------------------------------------------------------------------- */
+  .story-block--tail .story-block__bg {
+    position: static;
+  }
+
+  .about,
+  .services {
+    position: static;
+  }
+
+  /* ---- About + Services backdrop ---------------------------------------
+     Source: the designer's own "Bg-all_mobile 1.png" (375px wide already).
+     Its painted band is 3284px = About 1784 + gap 160 + Services 1340, i.e.
+     exactly the run this wrapper covers, so it maps straight on. Dark for the
+     first ~half, then the smoke turns it light for Services.
+
+     It goes on the WRAPPER'S OWN background, not on .story-block__bg. That
+     child is `position:absolute; z-index:-1`, and .story-block is
+     `position:relative; z-index:auto` — so the parent forms no stacking
+     context and a negative-z child paints in the ROOT one, i.e. BEHIND
+     .story-block's opaque background-color. Anything put on that layer is
+     invisible no matter what the image is. An element's own background-image
+     paints above its own background-color and below its content, so this
+     needs no stacking-context trickery at all.
+     -------------------------------------------------------------------- */
+  .story-block:not(.story-block--tail) {
+    background-image: url("../assets/images/bg-mobile-head.webp");
+    /* Sized exactly as the desktop slices are: full width, but its LITERAL
+       height in px — `.story-block__bg-part` is `width:100%; object-fit:fill`
+       with a hardcoded Figma height for the same reason, so the art stretches
+       horizontally only and the bands never drift off their y-positions.
+       `100% 100%` was wrong: it re-scaled the art vertically to whatever the
+       content happened to come to. */
+    background-size: 100% var(--bg-head-height);
+    background-position: top center;
+    background-repeat: no-repeat;
+    /* Nothing below the art's 3284px is painted by it, so that strip shows the
+       wrapper colour. The desktop wrapper never has one (there the art IS the
+       height), so this is mobile-only: the art's own bottom tone, which keeps
+       the light Services band continuous instead of cutting to near-black. */
+    background-color: var(--color-bg-head-end);
+  }
+
+  /* The desktop slice layer is what the mobile band replaces. */
+  .story-block:not(.story-block--tail) .story-block__bg {
+    display: none;
+  }
+
+  /* About must not paint over it: the dark top of the band IS About's
+     background, and an opaque fill here buries the smoke at About's bottom. */
+  .about {
+    background-color: transparent;
+  }
+
+  /* Figma 434:1821: pt-80 px-16 pb-40, gap 64. */
+  .about__inner {
+    padding: var(--space-section-top) var(--space-gutter)
+      var(--space-section-bottom);
+    align-items: stretch;          /* desktop right-aligns the two groups */
+    gap: var(--space-title-gap);
+  }
+
+  .about__intro {
+    align-items: stretch;
+    gap: var(--space-title-gap);   /* Title ends 439 -> Desc 503 */
+  }
+
+  /* Figma 434:1825 — flex-col, items-start, 32px between label and headline. */
+  .about__title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2xl);
+  }
+
+  /* The headline is the only child left with a desktop flex ratio; in a column
+     that basis would fight the intrinsic height, so opt it out. */
+  .about__headline {
+    flex: none;
+    font-size: var(--font-size-headline);   /* 48px — desktop 80px */
+    /* The per-line spans carry Figma's own leading spaces now, so the single
+       first-line indent the desktop uses would double up. */
+    text-indent: 0;
+  }
+
+  /* Figma 434:1827 draws 8 hard lines, each with a different indent baked in
+     as leading spaces. Each line becomes a block that preserves its own
+     whitespace; pre-WRAP (not pre) so a phone narrower than the 375 canvas
+     wraps a long line instead of pushing it under the overflow clip.
+
+     white-space lives HERE and not on .about__headline on purpose: the source
+     newlines between the spans belong to the parent, stay collapsible, and so
+     never render as blank lines between the lines of the headline. */
+  .about__headline-line {
+    display: block;
+    white-space: pre-wrap;
+  }
+
+  /* Figma 434:1828 — the two paragraphs stack, 33px apart, full width. */
+  .about__desc {
+    width: 100%;
+    flex-direction: column;
+    gap: var(--about-desc-gap);
+  }
+
+  .about__desc-col {
+    width: 100%;
+  }
+
+  /* Figma 434:1831 — one column, 32px between the four stat blocks. */
+  .about__stats {
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr);
+    column-gap: 0;
+    row-gap: var(--space-2xl);
+  }
+
+  /* The number shrank to 88px (2026-08-20) but Figma keeps the Stat frame a
+     fixed 173px, so the block no longer measures itself: 106 + 29 = 135 would
+     collapse Gruop_Stats from its drawn 788px to 636. Carry the height here and
+     centre the pair inside it — that restores the drawn 205px block pitch and
+     an even 70px between one label and the next number.
+
+     Figma leaves blocks 3 and 4 top-aligned (19px higher than 1 and 2, gaps
+     70/51/70), which is left over from when 144 + 29 filled the frame exactly
+     and the alignment could not show. Centring all four is the consistent
+     reading of the same 173px frame. */
+  .stat {
+    height: var(--stat-block-height);
+    justify-content: center;
+  }
+
+  /* Figma 434:1833 — 88px, down from the desktop 120px, so "+64%" stops filling
+     the whole 343px column. leading-normal then gives a 106px box. */
+  .stat__value {
+    font-size: var(--font-size-stat);
+  }
+
+  /* ---- Services (Figma "Services" 434:1801 — 375 x 1340) ---------------
+     The mobile STRUCTURE differs from desktop, so it wins over a scaled-down
+     desktop: the label sits ABOVE the headline, the headline breaks into three
+     hard paragraphs instead of two, the row is items-START (number and dot
+     stay on line 1 of a name that now WRAPS), the desc and tags stack instead
+     of sitting side by side, and the per-service image is gone entirely.
+
+     NOT overridden because Figma measures them IDENTICAL to desktop: the mono
+     label (18px, 187px wide), the desc copy (16px mono, leading-normal), the
+     tag pill, the 1px #2a2a2a dividers, the 32px padding around each row, the
+     24px row -> desc gap, both toggle border colours and the corner brackets.
+     -------------------------------------------------------------------- */
+
+  /* Figma 434:1801 — px-16, py-40, gap-64. The top padding also swallows the
+     160px gap Figma leaves between About and Services (see --services-pad-top). */
+  .services__inner {
+    padding: var(--services-pad-top) var(--space-gutter)
+      var(--space-section-bottom);
+    gap: var(--space-title-gap);
+  }
+
+  /* Figma 434:1804 — flex-col, items-start, 32px between label and headline. */
+  .services__title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2xl);
+  }
+
+  /* Same reason as .about__headline: a desktop flex ratio fights the intrinsic
+     height once the title becomes a column. Font size comes from the mobile
+     --font-size-headline (48px) on its own. */
+  .services__headline {
+    flex: none;
+  }
+
+  /* Desktop pins each line with nowrap; mobile MUST wrap — "What we do to make"
+     is what breaks into the drawn "WHAT WE DO" / "TO MAKE". */
+  .services__headline-line {
+    white-space: normal;
+  }
+
+  /* The desktop 191px indent belongs to the 80px type; mobile re-indents per
+     Figma paragraph below. */
+  .services__headline-line--indent {
+    padding-left: 0;
+  }
+
+  /* Figma 434:1806's paragraphs 2 and 3. text-indent, not padding: paragraph 2
+     wraps to "YOUR" / "BRAND" and only the FIRST line carries the indent —
+     padding-left would push "BRAND" across too. The whitespace between the two
+     part spans is collapsible and sits in a block container, so it produces no
+     stray line box. */
+  .services__headline-part {
+    display: block;
+    text-indent: var(--services-headline-indent-2);
+  }
+
+  .services__headline-part--drop {
+    text-indent: var(--services-headline-indent-3);
+  }
+
+  /* Rows are 32px (one-line name) or 58px (two-line), not the desktop's fixed
+     48 — the toggle sets the floor, the name sets everything above it. */
+  .services__row {
+    height: auto;
+    min-height: var(--services-toggle-size);
+  }
+
+  /* Figma "Name" is items-start: with a wrapped name the number and dot stay
+     on line 1 instead of centring against both lines. */
+  .services__name {
+    width: auto;
+    flex: 1;
+    min-width: 0;
+    align-items: flex-start;
+  }
+
+  /* Figma pt-4 on the number box — that is exactly (29 − 21) / 2, i.e. centred
+     on the first line of the service name. */
+  .services__num {
+    width: var(--services-num-width);
+    margin-top: var(--services-num-offset);
+  }
+
+  .services__caption {
+    align-items: flex-start;
+    min-width: 0;
+  }
+
+  /* Figma draws the 12px dot at y=8 in a 12x20 box — again the centre of the
+     first 29px line, which flex-start alone would not give. */
+  .services__dot {
+    margin-top: var(--services-dot-offset);
+  }
+
+  /* Figma fixes the name box at 200px (the leftover 12px of the row sits
+     between Name and the toggle) and lets it WRAP — that is what turns 01, 02
+     and 03 into two-line rows. `display: block` is required for the width to
+     apply at all: the span is inline by default and width is ignored there.
+     max-width keeps a sub-375 phone shrinking instead of overflowing. */
+  .services__service {
+    display: block;
+    width: var(--services-name-width);
+    max-width: 100%;
+    white-space: normal;
+  }
+
+  /* "MOTION DESIGN" measures 194px and would fit the 200px column, so its
+     break is Figma's own <br>, not a wrap. */
+  .services__break {
+    display: inline;
+  }
+
+  /* 32x32 instead of 48. The bracket arms are inherited untouched — Figma's
+     mobile angles sit on the box corner with the same ~2px overhang the shared
+     --bracket-inset already produces, so the geometry scales on its own. */
+  .services__toggle {
+    width: var(--services-toggle-size);
+    height: var(--services-toggle-size);
+  }
+
+  /* The mark inside the 24px icon box is 18 x 1.5 on mobile, not 24 x 2. */
+  .services__plus::before {
+    width: var(--services-bar-length);
+    height: var(--services-bar-thickness);
+    margin: calc(var(--services-bar-thickness) / -2) 0 0
+      calc(var(--services-bar-length) / -2);
+  }
+
+  .services__plus::after {
+    width: var(--services-bar-thickness);
+    height: var(--services-bar-length);
+    margin: calc(var(--services-bar-length) / -2) 0 0
+      calc(var(--services-bar-thickness) / -2);
+  }
+
+  /* Figma hides Rectangle 4 in every mobile accordion item — there is no
+     per-service image in this layout at all. */
+  .services__thumb {
+    display: none;
+  }
+
+  /* Figma "Desc" — flex-col, gap-16, pl-63. Desktop puts desc and tags on one
+     row; mobile stacks them. */
+  .services__panel-inner {
+    padding: var(--space-xl) 0 0 var(--services-desc-indent);
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-lg);
+  }
+
+  .services__desc {
+    width: 100%;
+  }
+
+  /* Figma gap-[8px_16px] — item 03 carries three tags and wraps to two rows. */
+  .services__tags {
+    flex-wrap: wrap;
+    gap: var(--services-tag-row-gap) var(--space-lg);
+  }
+
+  /* ---- Cases (Figma "Cases" 434:1845 — 375 x 3315) ---------------------
+     Again a different STRUCTURE, not a scaled desktop: the mono label moves
+     ABOVE the headline, the headline breaks into five hard lines instead of
+     two, the 1280px flex-wrap grid becomes one column, and every card is a
+     fixed 343 SQUARE whose image absorbs whatever the name box leaves.
+
+     NOT overridden because Figma measures them IDENTICAL to desktop: the mono
+     label (18px, 187px wide), the thesis (18px mono, 299px, right-aligned —
+     434:1851 sits at x=44..343 inside the items-end column, which is already
+     where the desktop rule puts it), the 64px head/body gaps, the 32px body
+     gap, the 24px card gap, the 16px filter gap, the card tag pill and the
+     32/32 tags offset.
+
+     The background stays the flat --color-bg-cases: the Figma frame's own Bg
+     child is hidden, and the designer's "Bg-all_mobile 2.png" band measures a
+     flat mean luminance of 16.3 across all 3315 rows — #101010 exactly. A flat
+     colour is also what lets the section keep changing height under a filter
+     (CLAUDE.md), which is the whole reason slice 2 was retired on desktop.
+     -------------------------------------------------------------------- */
+
+  /* Figma 434:1845 — pt-80 px-16 pb-40, gap-64. */
+  .cases__inner {
+    width: 100%;
+    padding: var(--space-section-top) var(--space-gutter)
+      var(--space-section-bottom);
+  }
+
+  /* Figma 434:1848 — flex-col, items-start, 32px between label and headline. */
+  .cases__title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2xl);
+  }
+
+  /* Same reason as .about__headline / .services__headline: a desktop flex ratio
+     fights the intrinsic height once the title becomes a column. The 48px comes
+     from the mobile --font-size-headline on its own. */
+  .cases__headline {
+    flex: none;
+  }
+
+  /* The desktop 103px first-line indent belongs to the 80px type; mobile
+     re-indents per Figma line below. */
+  .cases__headline-line--indent {
+    padding-left: 0;
+  }
+
+  /* Figma 434:1850's five lines. Desktop leaves these spans inline (so the two
+     nowrap lines read as one string each); here each becomes its own line with
+     the indent Figma bakes in as leading spaces. text-indent, not padding — a
+     line that ever wrapped would otherwise carry the offset onto its 2nd line.
+     Lines 2 and 4 ("brand is" / "results") sit at 0 and need no modifier.
+     white-space: nowrap is inherited from the line and KEPT: Figma sets it too. */
+  .cases__headline-part {
+    display: block;
+  }
+
+  .cases__headline-part--indent-1 {
+    text-indent: var(--cases-headline-indent-1);
+  }
+
+  .cases__headline-part--indent-2 {
+    text-indent: var(--cases-headline-indent-2);
+  }
+
+  .cases__headline-part--indent-3 {
+    text-indent: var(--cases-headline-indent-3);
+  }
+
+  /* Figma 434:1853 draws the filter row 728px wide INSIDE the 343 column, so it
+     is meant to scroll sideways. The negative margin + equal padding bleeds it
+     to the screen edges (343 + 2 x 16 = 375 exactly), which is why the section's
+     own `overflow-x: clip` guard clips nothing and the ICB stays at 375. */
+  .cases__filters {
+    margin-inline: calc(-1 * var(--space-gutter));
+    padding-inline: var(--space-gutter);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;             /* Firefox */
+    -ms-overflow-style: none;          /* legacy Edge */
+    /* overflow-x: auto forces overflow-y to auto as well, which would clip the
+       chips' focus ring (2px outline + 4px offset) against a box that is exactly
+       48px tall. The padding gives the ring room and the equal negative margin
+       gives it straight back, so NOTHING drawn moves: the row still occupies 48px
+       of flow and the 32px gap to the grid is measured from the same edge. */
+    padding-block: var(--space-sm);
+    margin-block: calc(-1 * var(--space-sm));
+  }
+
+  .cases__filters::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Without this the flex row squeezes every pill to fit 343 instead of
+     overflowing, and there is nothing left to scroll. */
+  .cases__filter {
+    flex: none;
+  }
+
+  /* Figma 434:1864 — one column, 32px apart, full width. */
+  .cases__grid {
+    width: 100%;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: var(--space-2xl);
+  }
+
+  /* Every Case instance is the same 343 square — the three desktop size
+     variants collapse into one. */
+  .cases__card,
+  .cases__card--md,
+  .cases__card--lg,
+  .cases__card--sm {
+    width: 100%;
+  }
+
+  .cases__card {
+    height: var(--cases-card-height);
+  }
+
+  /* Figma 434:1865-1871 — the card is a fixed 343 square and the IMAGE takes the
+     remainder: 301px under a one-line name (343 - 18 gap - 24 name). Every
+     desktop height override has to be repeated here because
+     `.cases__card--sm.cases__card--short .cases__media` is specificity 0,3,0 and
+     a media query adds none — only an equally specific rule later in the file
+     wins. */
+  .cases__media,
+  .cases__card--md .cases__media,
+  .cases__card--lg .cases__media,
+  .cases__card--sm .cases__media,
+  .cases__card--sm.cases__card--short .cases__media {
+    height: auto;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* Name block: 20px (desktop 24) and an 18px gap above it (desktop 24). */
+  .cases__card {
+    gap: var(--cases-card-gap);
+  }
+
+  .cases__project,
+  .cases__year {
+    font-size: var(--cases-name-size);
+  }
+
+  /* Figma gives the project name `flex-1 min-w-0` and keeps only the YEAR
+     nowrap, so a long name uses the space the year does not and wraps inside it
+     rather than pushing the year off the card. At 20px "BOTANICA E-COMMERCE"
+     is the only one that comes close to needing it. */
+  .cases__project {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .cases__year {
+    flex: none;
+  }
+
+  /* THE image fix. `.cases__img` sets no width/height in CSS — it takes them from
+     the <img width height> ATTRIBUTES, which are a presentational hint carrying
+     the DESKTOP dimensions. On desktop those happen to equal the media box, so
+     it has always looked right; on mobile the box is 343x301 while the hint is
+     still 733x800 / 515x515 / 405x480, and an absolutely positioned replaced
+     element keeps that intrinsic HEIGHT instead of obeying the over-constrained
+     `inset: 0`. The image therefore rendered up to 2.6x too tall, anchored at the
+     top and clipped — a hugely zoomed corner — and object-fit / object-position
+     were resolving inside that oversized box where they could not be seen.
+
+     Sizing the element explicitly makes the box authoritative, which is what the
+     rest of the Cases CSS already assumes. Deliberately mobile-only: desktop is
+     already correct via the attributes and must not be touched. */
+  .cases__img {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Desktop anchors four of the images to the BOTTOM of their frame, which works
+     there because each box is close to its source's own aspect (0.84-1.0). The
+     mobile box is a squat 343 x 290 (1.18) holding mostly PORTRAIT sources, so
+     bottom-anchoring throws away the top 23-29% — the Kinetic wordmark, the top
+     of the Vaulta phone, the top of the Botanica monitor. Centring keeps the
+     subject in frame and is also what Figma does: in the mobile frame six of the
+     seven images are a plain centred cover (only Synapse keeps object-bottom,
+     and it is centred here too on the designer's instruction).
+
+     Specificity note: the desktop rule is `.cases__media--bottom .cases__img`
+     (0,2,0) and a media query adds none, so the selector has to be repeated. */
+  .cases__media--bottom .cases__img {
+    object-position: center;
+  }
+
+  /* Figma 434:1871 hand-breaks "BOTANICA / E-COMMERCE" (Name box 58 not 29).
+     Letting the name wrap at its own space reproduces that break with no markup;
+     the year keeps the shared nowrap. */
+  .cases__project {
+    white-space: normal;
+  }
+
+  /* The category badges stay hover-only, as on desktop — which on a touch screen
+     means they never appear. That is the designer's call (2026-08-21): an
+     earlier revision showed them at rest here and it read as clutter over the
+     image. The markup stays so a narrow DESKTOP window still reveals them on
+     hover; nothing about the pill itself is overridden. */
+
+  /* ==================================================================
+     Process — Figma "Process" 434:1872 (375 x 1399 at frame y=7448)
+
+     NOT a scaled desktop layout. The chequerboard is gone: all four steps
+     sit flush left in one full-width 343px column, and the headline goes
+     from 2 nowrap lines at 80px to a 5-line staircase at 48px.
+
+     Process stays position:absolute on slice 3 of the tail wrapper. It is
+     static content (always 4 steps), so CLAUDE.md's rule allows the pin —
+     and unpinning it alone is the documented collapse: Team, Reviews and
+     Footer are still absolute, so the tail would lose its height and the
+     document would end mid-page. See the tail note further up.
+
+     NOT overridden, because Figma measures them IDENTICAL to desktop: the
+     mono label (18px, 187px wide), the 32px label <-> headline gap, the
+     64px title <-> steps gap, the 32px gap between steps, the 24px
+     number <-> heading and 16px name <-> description gaps, the number
+     (16px mono) and the description (16px mono, snug).
+     ================================================================== */
+
+  /* Slice 3 IS the Process band, and Process is 1399 tall here rather than
+     the desktop 1322 — without this the last ~80px of step 04 would fall
+     past the light band onto slice 4's dark art, with dark ink on it.
+     Stretching the slice is safe: the band is a flat grain (see the token).
+     Slice 4 shifts down 77px as a result, which is harmless — Team's first
+     text lands at 1322 + its 160px top padding = 1482, still on the dark. */
+  .story-block__bg-part--3 {
+    height: var(--process-height);
+  }
+
+  /* Figma 434:1872: pt-80 px-16 pb-40, gap 64. Written out rather than left
+     to the tokens: unlike .team__inner / .reviews__inner, this rule hardcodes
+     `160px 80px 80px`, so nothing here would move on its own. The 64px gap
+     is already Figma's and stays. */
+  .process__inner {
+    padding: var(--space-section-top) var(--space-gutter)
+      var(--space-section-bottom);
+  }
+
+  /* Figma 434:1874 — flex-col, items-start, the same 32px gap. */
+  .process__title {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  /* The headline is the only child left with a desktop flex ratio; in a column
+     that basis would fight the intrinsic height, so opt it out. items-start
+     then sizes it fit-content clamped to the 343px column, which is exactly
+     Figma's `min-w-full w-[min-content]`. Size comes from the shared
+     --font-size-headline (48px), already set for every section. */
+  .process__headline {
+    flex: none;
+  }
+
+  /* Desktop pins both lines to one line each with nowrap. Here they must wrap:
+     at 48px in the 343 column our own PP Neue Montreal measures
+     "A STRUCTURED" 371.4 (breaks after "A"), "STRUCTURED" 327.6, "PATH" 132.6,
+     indent + "TO YOUR" 292.3 and "BRAND //" 223.4 — Figma's five lines exactly,
+     5 x 48 = 240px, with no extra markup. */
+  .process__headline-line {
+    white-space: normal;
+  }
+
+  /* text-indent, not the desktop padding-left: this line now wraps into two,
+     and only the first of them carries Figma's 9-space offset. */
+  .process__headline-line--indent {
+    padding-left: 0;
+    text-indent: var(--process-headline-indent);
+  }
+
+  /* Figma 434:1877 stacks all four steps at x=0 — steps 02 and 04 lose both
+     the right alignment and the 110px inset that make the desktop zigzag. */
+  .process__step--right {
+    justify-content: flex-start;
+    padding-right: 0;
+  }
+
+  /* Figma 434:1878 — the block and its description both fill the 343 column.
+     Set here rather than on --about-col-width, which Hero and About also read.
+     (Figma's step 04 Name frame still reports the leftover desktop 405; our
+     markup is uniform, so it normalises itself.) */
+  .process__block,
+  .process__desc {
+    width: 100%;
+  }
+
+  /* Figma 434:1881 keeps the heading at the desktop 32px, but the token it
+     reads (--font-size-service) drops to 24px here for the Services names. */
+  .process__heading {
+    font-size: var(--process-heading-size);
+  }
+
+  /* ---- Team (Figma "Team" 434:1898 — 375 x 1837) ------------------------
+     A different STRUCTURE, not a scaled desktop: the mono label moves ABOVE
+     the headline, the headline breaks into five lines instead of two, and the
+     right-aligned 952px 3 x 2 grid becomes a full-width TWO-column grid with
+     an asymmetric gutter (16 across, 10 down) whose rows each hug their own
+     tallest card.
+
+     Team stays position:absolute on slice 4 of the tail wrapper. It is static
+     content (always 6 members), so CLAUDE.md's rule allows the pin — and
+     unpinning it alone is the documented collapse described in the tail note
+     further up (Reviews and Footer are still absolute too).
+
+     NOT overridden, because Figma measures them IDENTICAL to desktop: the
+     mono label (18px, 187px wide), the 32px label <-> headline gap, the 64px
+     title <-> grid gap, the 24px photo <-> info gap, the 16px name-group <->
+     bio gap and the 8px name <-> role gap. The section padding needs no rule
+     either: unlike .cases__inner / .process__inner, Figma gives Team a
+     SYMMETRIC py-80, which is exactly what .team__inner's existing
+     `var(--space-section-top) var(--space-gutter)` already resolves to here.
+
+     The photos need no mobile export. The 296x320 sources drop into a
+     164x186 box and .team__photo already carries object-fit: cover +
+     object-position: bottom — and, unlike .cases__img, already sets explicit
+     width/height: 100%, so it is immune to the intrinsic-height bug fixed for
+     Cases above. (Figma additionally re-crops ONE photo — Olena, 434:1910, at
+     ~130% zoom. Not reproduced: a single-card override for a Figma-side crop.)
+     -------------------------------------------------------------------- */
+
+  /* Slice 3 grew to 1399 for Process, so slice 4 — the band Team is drawn on —
+     no longer starts at the desktop 1322. Pinning to the same token keeps the
+     two in step; at the desktop 1322 the section's own 80px mobile padding
+     (down from 160) would leave only a 3px margin over the slice-3 seam. */
+  .team {
+    top: var(--process-height);
+  }
+
+  /* Figma 434:1898 is items-start; desktop right-aligns the grid (items-end). */
+  .team__inner {
+    align-items: flex-start;
+  }
+
+  /* Figma 434:1901 — flex-col, items-start, the same 32px gap. */
+  .team__title {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  /* Same reason as .cases__headline / .process__headline: a desktop flex ratio
+     fights the intrinsic height once the title becomes a column. The 48px comes
+     from the mobile --font-size-headline on its own. */
+  .team__headline {
+    flex: none;
+  }
+
+  /* The desktop 118px first-line indent belongs to the 80px type; mobile
+     re-indents per Figma paragraph below. */
+  .team__headline-line--indent {
+    padding-left: 0;
+  }
+
+  /* Figma 434:1903's four paragraphs. Desktop leaves these spans inline (so the
+     two nowrap lines read as one string each); here each becomes its own line
+     with the indent Figma bakes in as leading spaces. Paragraph 2
+     ("that knows") sits at 0 and needs no modifier. white-space: nowrap is
+     inherited from the line and KEPT — except on the one paragraph Figma lets
+     wrap (see --wrap). */
+  .team__headline-part {
+    display: block;
+  }
+
+  .team__headline-part--indent-1 {
+    text-indent: var(--team-headline-indent-1);
+  }
+
+  .team__headline-part--indent-3 {
+    text-indent: var(--team-headline-indent-3);
+  }
+
+  .team__headline-part--indent-4 {
+    text-indent: var(--team-headline-indent-4);
+  }
+
+  /* "HOW TO BUILD" overruns the 343 column at 48px, so Figma's HOW TO / BUILD
+     break falls out of normal wrapping — no extra markup, and text-indent
+     leaves the second line ("BUILD") back at 0 exactly as drawn. */
+  .team__headline-part--wrap {
+    white-space: normal;
+  }
+
+  /* Figma 434:1904 — two 164px columns in the 343 column, 16px apart on BOTH
+     axes, so a single `gap` fully replaces the desktop 32px shorthand.
+     align-items: start lets each card keep its natural height, which is what
+     makes the rows 422 / 443 / 421 as drawn. */
+  .team__grid {
+    width: 100%;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-lg);
+    align-items: start;
+  }
+
+  /* Desktop pins the frame to --team-card-width; here the column decides.
+     The height comes from the overridden --team-photo-height on its own. */
+  .team__media {
+    width: 100%;
+  }
+
+  /* Figma 434:1906 draws the name at 18px with leading-normal and lets it WRAP
+     (YANA SHEVCHENKO / SOFIA ROMANOVA are two lines) — desktop is 24px,
+     leading-none and nowrap. */
+  .team__name {
+    font-size: var(--team-name-size);
+    line-height: normal;
+    white-space: normal;
+  }
+
+  /* .team__role and .team__bio deliberately have NO rule here. The corrected
+     Figma frame draws them at 14px and 16px, which is exactly what the desktop
+     --font-size-tag / --font-size-body-sm already give at this breakpoint (both
+     are unset in the mobile :root). Desktop's white-space: nowrap on the role
+     carries over, as Figma sets it too — the longest role (PACKAGING DESIGNER)
+     still fits the 163.5px column at 14px. --line-height-snug (1.3) on the bio
+     likewise matches Figma's leading-normal for IBM Plex Mono. */
+
+  /* ---- Reviews (Figma "Review" 434:1914 — 375 x 1241) ------------------
+     A different CARD, not a scaled desktop one. Figma drops the portrait
+     entirely and stands the card up — 320 x 400 instead of 760 x 320 — with the
+     body's three groups (role + name / quote / "view the case") spread down the
+     full height. The title block stacks label over headline the way About,
+     Cases and Team already do, and the arrow row's gap opens 24 -> 32.
+
+     .reviews STAYS position:absolute on slice 4. Its content is static (always
+     five cards, and both the card and the stage are fixed-height), so
+     CLAUDE.md's shared-background rule allows the pin — the same reasoning
+     recorded for Team above. It also has to stay pinned for now: per the tail
+     note higher up in this breakpoint, unpinning one tail section while the
+     others are absolute collapses .story-block--tail to height 0.
+
+     The FAN itself is not here — script.js writes it per card from the
+     --review-slot-* tokens, which this breakpoint redefines in variables.css.
+
+     NOT overridden, because Figma measures them identical to desktop: the mono
+     label (18px, 187px via --about-label-width), the 32px label <-> headline gap,
+     the 64px title <-> carousel and stack <-> arrows gaps, the card's 32px padding,
+     the role at 14px, the quote at 16px with 1.3 leading, the link at 16px, the
+     48px arrows with 24px icons, and the entire progress row (80px active
+     segment + four 12px dots + 8px gaps = Figma's 160px, to the pixel).
+     .reviews__name needs no rule either: it reads --font-size-service, which
+     this breakpoint already sets to 24px — exactly Figma's card-name size.
+     -------------------------------------------------------------------- */
+
+  /* Figma 434:1914 — pt-80 px-16 pb-40. The desktop shorthand is symmetric and
+     would leave a full 80px of dead space under the arrow row. */
+  .reviews__inner {
+    padding: var(--space-section-top) var(--space-gutter)
+      var(--space-section-bottom);
+  }
+
+  /* Label above the headline instead of beside it; the 32px gap carries over. */
+  .reviews__title {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .reviews__headline {
+    flex: none;
+  }
+
+  /* At 48px "Because we deliver" measures ~430px against a 343px column, so the
+     desktop nowrap has to go — both lines wrap naturally — and the 394px indent
+     on line 2 goes with it, having been measured against the 80px desktop
+     headline. Figma's own mobile title block is no help here: 434:1918 carries
+     a duplicated About-us headline rather than the Reviews one, so only its
+     STRUCTURE (label on top, 48px, left-aligned) is taken from the frame. */
+  .reviews__headline-line {
+    white-space: normal;
+  }
+
+  .reviews__headline-line--indent {
+    padding-left: 0;
+  }
+
+  /* Figma 434:1928 — 48 + 32 + 160 + 32 + 48 = the 320px arrow row. */
+  .reviews__nav {
+    gap: var(--space-2xl);
+  }
+
+  /* No portrait on the mobile card; the body takes the full 256px content box. */
+  .reviews__media {
+    display: none;
+  }
+
+  /* Figma groups role + name 8px apart and spreads THREE groups down the 336px
+     content box. The DOM has all four as flat siblings, so a plain
+     justify-content: space-between would blow the role <-> name gap open too.
+     Instead the link keeps its desktop margin-top:auto (which pins it to the
+     bottom) and the quote gets one as well — two auto margins split the free
+     space evenly between exactly those three groups, while the role's fixed 8px
+     stays fixed. A quote long enough to fill the card collapses both gaps to
+     zero rather than overflowing. */
+  .reviews__role {
+    margin-bottom: var(--space-sm);        /* desktop --space-md (12px) */
+  }
+
+  .reviews__name {
+    margin-bottom: 0;                      /* desktop --space-xl (24px) */
+  }
+
+  .reviews__quote {
+    margin-top: auto;
+  }
+
+  /* ---- Footer (Figma "Footer" 434:1945 — 375 x 1136) --------------------
+     A different STRUCTURE, not a scaled desktop. Everything inside the footer
+     is unpinned from the 1440 canvas and put back into normal flow, because
+     Figma stacks the whole section as one column: pt-80 px-16 pb-32, the Call
+     group (434:1950) 80 -> 605, a 40px joint, then Group 11 (434:1966)
+     645 -> 1104.
+
+     The four structural moves, in Figma order:
+       - the "Sign up..." blurb (434:1953) leaves the right-hand column and
+         drops UNDER the headline, 32px below it, still right-aligned;
+       - the form (434:1954) goes full width and left-aligned, button included;
+       - the three link columns become a 2 x 2 grid with Contacts on its own
+         row (434:1981 at y 856, one 32px row below the other two);
+       - the hollow wordmark falls 133 -> 34px, so instead of a 140px clip box
+         cutting a giant letter in half it sits in a 23px one (434:1986),
+         nearly flush with the divider.
+
+     NOT overridden, because Figma measures them identical to desktop: the
+     form's field pitch (Inputs at y 0/56/112 in BOTH frames — desktop
+     223:4147-4153, mobile 434:1956-1962 — so .footer__field's --space-lg
+     still holds), the button's 32px margin, the mono column labels, the
+     16px links and their 24px/16px gaps, the 14px legal type and the
+     #2a2a2a divider. The button's 260 x 48 and 16px text arrive on their own
+     from the mobile --hero-cta-width/height and --font-size-button.
+
+     .footer stays position:absolute on slice 4 of the tail wrapper. Its
+     content is static (a fixed three-field form and fixed link lists), so
+     CLAUDE.md's shared-background rule allows the pin — the same reasoning
+     recorded for Team and Reviews above. It also still HAS to stay pinned:
+     per the tail note higher up in this breakpoint, unpinning one tail
+     section while the others are absolute collapses .story-block--tail to
+     height 0. What does change is its height — `auto` now, so the flow
+     content decides it instead of the desktop's literal 1279px.
+     -------------------------------------------------------------------- */
+
+  /* Both the section and the band below read this, so they can never drift
+     apart — the same reason --reviews-top is a token. */
+  .footer {
+    top: var(--footer-top);
+    height: auto;
+    padding: var(--space-section-top) var(--space-gutter) var(--space-2xl);
+  }
+
+  /* ---- The footer's own band -------------------------------------------
+     The shared slice cannot carry this section on mobile. "Bg-all 4-4.png" is
+     drawn for a 1279px desktop footer whose dark half starts 826px down; the
+     stretch that lands its light edge on the mobile footer top (see
+     .story-block__bg-part--4 below) also stretches that light half to ~880px,
+     while the mobile frame turns dark at ~530. The link columns start at 645,
+     so #f5f5f0 text was sitting on a ~157-luminance grey. One image cannot
+     satisfy both: the alignment scale and the band-length scale pull opposite
+     ways. So the footer gets the designer's OWN mobile art instead.
+
+     It hangs off the WRAPPER as a ::before, not off .footer, for the paint
+     order. In the root stacking context (nothing here makes one — see the
+     About/Services note above) the slices are non-positioned and paint first;
+     then positioned z-auto boxes in DOM order: this ::before (the wrapper's
+     first child) -> .footer__stars -> .footer. So the band covers the slice
+     but stays UNDER the starfield and under the footer's own text. A
+     background on .footer itself would bury the stars, and z-index:-1 would
+     drop the band behind the opaque slices. ::after is already the Reviews
+     hairline, which is why this is ::before.
+
+     Pulled up by the art's hard light edge (--footer-bg-art-top) so that edge
+     lands on --footer-top to the pixel, and drawn at an explicit px height
+     rather than a percentage, so it only ever stretches horizontally — the
+     same contract as the slices and the head band. That height is the file's
+     own times --footer-bg-art-scale, which is where the band's fade actually
+     comes from; the derivation is on the token in variables.css. It runs to
+     the wrapper's bottom rather than to a measured footer height, which costs
+     nothing: the art reaches past both.
+     -------------------------------------------------------------------- */
+  .story-block--tail::before {
+    content: "";
+    position: absolute;
+    top: var(--footer-top);
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: var(--color-footer-bg-end);
+    background-image: url("../assets/images/bg-mobile-tail.webp");
+    background-repeat: no-repeat;
+    background-size: 100% calc(var(--footer-bg-art-height) * var(--footer-bg-art-scale));
+    background-position: 0 calc(-1 * var(--footer-bg-art-top) * var(--footer-bg-art-scale));
+  }
+
+  /* The wrapper is cut at the footer's bottom. Its height comes from the
+     in-flow slices, and slice 4 has to stay taller than the footer (see below),
+     so without this the page ended on 217px of empty dark band under "Privacy
+     policy" — the Figma frame ends ON the footer. An explicit height takes the
+     sizing away from the slices, and overflow-y: clip stops the slice tail and
+     the starfield painting (and scrolling) past it. `clip` rather than
+     `hidden`, and only on the Y axis, so this stays the same kind of cut as the
+     .story-block overflow-x rule earlier in this breakpoint and makes no
+     scroll container. */
+  .story-block--tail {
+    height: calc(var(--footer-top) + var(--footer-height));
+    overflow-y: clip;
+  }
+
+  /* Slice 4 no longer has to ALIGN anything — the band above is what the
+     footer sits on now, and it hides everything this slice paints below
+     --footer-top. One job is left: keep the Reviews run above the footer dark.
+     The 4331 stretch pushes "Bg-all 4-4.png"'s light edge down to 4317, 11px
+     below the footer top, which is what keeps Reviews' arrow row (4218-4266)
+     off it — shortening the slice to merely reach the footer's bottom (4114)
+     would drag that edge up to 4160 and put the arrow row on the light band.
+     Its overhang past the footer is what the wrapper's height above cuts off,
+     so this only has to be tall ENOUGH now, never exact. */
+  .story-block__bg-part--4 {
+    height: 4331px;
+  }
+
+  /* ---- Call group (434:1950) — one column, 64px between Text and Form ---- */
+  .footer__inner {
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--footer-group-gap);
+  }
+
+  /* position:relative, not static: it is the containing block for the "]"
+     (a sibling of the h2) and, through .footer__form, for the success line. */
+  .footer__top {
+    position: relative;
+    left: auto;
+    top: auto;
+    width: 100%;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    /* Figma's 32px Text gap; the form adds another 32 of its own to make the
+       64 that separates Text from Form. */
+    gap: var(--space-2xl);
+  }
+
+  /* ---- Headline (434:1952) ----------------------------------------------
+     Figma writes ONE 48px paragraph over three lines with the brackets INLINE
+     with the words — "[<sp>Your" / "starting" / "<sp>point ]" — where desktop
+     has a flex row and a bracket parked at the far right. Dropping the flex
+     puts the spans back in inline flow, so "[" rides on line 1 and the words
+     wrap under it at x=0 exactly as drawn.
+
+     The break between YOUR and STARTING is the browser's own, not a forced
+     one: "YOUR STARTING" measures ~403px at 48px against a 343px column, and
+     "STARTING" alone ~248px, so it can only land where Figma puts it.
+     -------------------------------------------------------------------- */
+  .footer__title {
+    position: static;
+    display: block;
+    width: 100%;
+    /* The h2 renders no text of its own — every glyph lives in a span that sets
+       its own size — but as a BLOCK it now contributes a strut to each line box,
+       and the default h2 strut (27px Inter at 40.5px leading) hangs 4.5px of
+       descent below the 48px inline boxes, stretching the three lines to a
+       52.5px pitch. Matching the strut to the type it wraps pins them at 48. */
+    font-size: var(--font-size-headline);
+    line-height: var(--line-height-none);
+  }
+
+  /* Figma's seven leading spaces after the "[". Scoped away from the closing
+     bracket, which is still absolutely placed at the right edge and would be
+     shoved a full gap inwards by a shared margin. */
+  .footer__title-bracket:not(.footer__title-bracket--close) {
+    margin-right: var(--footer-bracket-gap);
+  }
+
+  .footer__title-line {
+    display: inline;
+    white-space: normal;
+  }
+
+  /* "point" takes its own line and is pushed right, stopping clear of the "]"
+     — Figma gets the same shape from eighteen leading spaces, but measuring
+     from the right edge survives any font-metric drift that counting spaces
+     would not. */
+  .footer__title-line:last-child {
+    display: block;
+    text-align: right;
+    padding-right: var(--footer-title-close-gap);
+  }
+
+  /* Third line, at the right edge: `right: 0` carries over from desktop. */
+  .footer__title-bracket--close {
+    top: calc(2 * var(--font-size-headline));
+  }
+
+  /* ---- Blurb + form -----------------------------------------------------
+     The DOM order is title -> "]" -> form -> blurb, which is the desktop
+     reading order; Figma's mobile column is title -> blurb -> form, so the two
+     swap with `order`. */
+  /* Figma 434:1953 is 69px for its three lines — 23 each, the same
+     leading-normal the column labels get, not the 1.5 the desktop rule asks
+     for (which renders 27 and runs the blurb 12px long). */
+  .footer__aside {
+    position: static;
+    order: 1;
+    width: 100%;
+    line-height: var(--line-height-snug);
+  }
+
+  /* relative, not static: .footer__form-msg is absolutely placed against it. */
+  .footer__form {
+    position: relative;
+    order: 2;
+    left: auto;
+    top: auto;
+    width: 100%;
+    /* on top of the column's own 32px — Figma's 64 between Text and Form. */
+    margin-top: var(--space-2xl);
+  }
+
+  /* Figma 434:1965 sits at x=0; desktop right-aligns it in the 406px form. */
+  .footer__submit {
+    align-self: flex-start;
+    font-size: var(--font-size-button);   /* 16px — desktop 18px */
+  }
+
+  /* ---- Group 11 (434:1966) ---------------------------------------------- */
+  /* Three line boxes here are set by an inherited strut rather than by the type
+     inside them — the same fault fixed on .footer__title above, and the reason
+     this group ran 44px long. None of these elements declares a line-height, so
+     each one takes the body's 18px/1.5 = 27px: the 16px links get a 27px row
+     where Figma draws 21, and the 18px labels get 27 where Figma draws 23.
+     --line-height-snug (1.3) IS what Figma calls leading-normal for IBM Plex
+     Mono, and with it every block lands on its drawn height to the pixel —
+     179 / 105 for the two column rows, 316 for the grid. Set on the list rather
+     than on .footer__link because the <li> owns the line box, not the <a>. */
+  .footer__bottom {
+    position: static;
+    width: 100%;
+    height: auto;
+  }
+
+  .footer__col-label {
+    line-height: var(--line-height-snug);   /* 23.4px — Figma 23 */
+  }
+
+  .footer__col-list {
+    font-size: var(--font-size-body-sm);    /* match the links the <li> wraps */
+    line-height: var(--line-height-snug);   /* 20.8px per row — Figma 21 */
+  }
+
+  /* Figma puts Menu at x=0 w=118 and Follow us at x=150, i.e. a 118px column
+     and a 32px gutter, with Contacts one 32px row below. Column 2 takes the
+     remainder instead of Figma's literal 117 (its content is left-aligned and
+     much shorter, so it reads identically), and Contacts spans BOTH columns:
+     "hello@brandco.studio" is a 192px nowrap string that a 118px or a
+     half-column track would break. */
+  .footer__cols {
+    position: static;
+    display: grid;
+    grid-template-columns: var(--footer-col-width) 1fr;
+    column-gap: var(--footer-col-gap);
+    row-gap: var(--space-2xl);
+  }
+
+  .footer__col {
+    width: auto;
+  }
+
+  .footer__col:last-child {
+    grid-column: 1 / -1;
+  }
+
+  /* ---- Closing block (Logo 434:1986 / Divider / Privacy 434:1991) --------
+     Desktop pins these three to Figma offsets because the desktop divider has
+     to cross the middle of a 133px letter, which flow cannot express. At 34px
+     there is nothing to cross: the clip box simply ends ON the divider, so the
+     whole group goes back into flow. */
+  .footer__closing {
+    position: static;
+    margin-top: var(--footer-group-gap);
+  }
+
+  /* Figma 434:1986 is 23px tall and clips a cap box that starts 6px inside it,
+     so 17 of the wordmark's ~24px of cap height show and the rest is cut off
+     flush with the divider. --footer-wordmark-offset drops the line box until
+     the cap top lands on that 6. */
+  .footer__wordmark-clip {
+    position: static;
+    height: var(--footer-wordmark-clip-height);
+  }
+
+  /* The desktop 2px stroke was drawn against a 133px letter; on a 34px one it
+     is a quarter of the stem and starts filling in the counters of R, D and O.
+     1px is the nearest real hairline — the same call, for the same reason, as
+     the .hero__reg override earlier in this breakpoint. */
+  .footer__wordmark {
+    margin-top: var(--footer-wordmark-offset);
+    -webkit-text-stroke-width: var(--border-width);
+  }
+
+  /* Figma 434:1988 — a 24px circle with a 14px "R", 3px after the wordmark. */
+  .footer__reg {
+    font-size: var(--footer-reg-size);
+    width: var(--footer-reg-badge);
+    height: var(--footer-reg-badge);
+    margin-left: var(--footer-reg-gap);
+    vertical-align: var(--footer-reg-lift);
+    border-width: var(--border-width);
+    -webkit-text-stroke-width: var(--border-width);
+  }
+
+  /* Figma 434:1949 spans the whole 375 frame; here that means bleeding back
+     out through the footer's own 16px gutter to the screen edges. */
+  .footer__divider {
+    position: static;
+    width: auto;
+    margin-inline: calc(-1 * var(--space-gutter));
+  }
+
+  /* Figma 434:1991 — a 12px-gap column, 32px under the divider, where desktop
+     spreads the two items across the full width. */
+  .footer__legal {
+    position: static;
+    flex-direction: column;
+    gap: var(--space-md);
+    margin-top: var(--space-2xl);
+  }
+
+  /* ---- Reduced motion -------------------------------------------------- */
+  @media (prefers-reduced-motion: reduce) {
+    .site-nav-panel,
+    .site-header__burger-icon::before,
+    .site-header__burger-icon::after {
+      transition: none;
+    }
+  }
+}

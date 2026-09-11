@@ -1,0 +1,787 @@
+/* ============================================================================
+   Brandco — Design Tokens (single source of truth)
+
+   DESKTOP ONLY — the layout is a fixed 1440px canvas, exactly like the mockup.
+   Every value below is the literal px from the Figma frame "UI 3" (223:3948)
+   in "Branding agency website" (NkSAJbCElSxupag9JPARDD).
+
+   NO vw / vh, NO clamp(), NO calc(), no fluid units — nothing scales.
+   ============================================================================ */
+
+/* ============================================================================
+   PP Neue Montreal — self-hosted (Free for Personal Use v3.0, assets/fonts/).
+   NOTE: the free package ships Semibold (600) and Extrabold (800) only — it has
+   no Bold (700) file, so there is no @font-face for 700 (see --font-weight notes).
+   ============================================================================ */
+@font-face {
+  font-family: "PP Neue Montreal";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../assets/fonts/PPNeueMontreal-Semibold.woff2") format("woff2"),
+       url("../assets/fonts/PPNeueMontreal-Semibold.otf") format("opentype");
+}
+
+@font-face {
+  font-family: "PP Neue Montreal";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("../assets/fonts/PPNeueMontreal-Extrabold.woff2") format("woff2"),
+       url("../assets/fonts/PPNeueMontreal-Extrabold.otf") format("opentype");
+}
+
+:root {
+  /* ---- Page ------------------------------------------------------------ */
+  --page-width: 1440px;        /* Figma frame width — the layout is fixed    */
+
+  /* ---- Colors ---------------------------------------------------------- */
+  --color-bg: #0d0d0d;                        /* section background          */
+  /* Cases paints its own band instead of using a Bg-all slice, so it can grow
+     and shrink with its content. Measured off "Bg-all 2.png", which is a flat
+     fill (std 1.1, no gradient): mean rgb(16.3) → #101010. The Figma rect under
+     it is #0d0d0d; the grain in the export lifts the average by ~3. */
+  --color-bg-cases: #101010;
+  --color-bg-header: rgba(13, 13, 13, 0.72);  /* translucent sticky header   */
+  --color-text-primary: #f5f5f0;              /* headings, stats, nav        */
+  --color-text-muted: #8f8f8f;                /* mono labels + body copy     */
+  --color-white: #ffffff;                     /* logo                        */
+  --color-border: #f5f5f0;                    /* header CTA + nav outlines   */
+  --color-border-muted: #8f8f8f;              /* hero CTA border             */
+  --color-ticker-border: #2a2a2a;             /* ticker bar hairline         */
+  --color-hover-tint: rgba(245, 245, 240, 0.08); /* soft 8% cream hover fill */
+
+  /* Services sits on the LIGHT band of the shared Bg-all scene, so its text
+     colours are inverted: dark ink on light instead of light on dark. */
+  --color-ink: #0d0d0d;                       /* headings / names on light   */
+  --color-ink-muted: #6b6b6b;                 /* labels + body on light      */
+  --color-divider: #2a2a2a;                   /* accordion hairlines         */
+  --color-tag-bg: #cdcdcd;                    /* service + case tag pill     */
+  --color-toggle-border: rgba(107, 107, 107, 0.17); /* collapsed +/x button  */
+
+  /* Cases: the card caption is a touch dimmer than the headings (Figma 139:123). */
+  --color-case-name: #e5e5e0;                       /* project name          */
+  --color-case-year: rgba(229, 229, 224, 0.48);     /* year, right of it     */
+
+  /* Footer starfield: the generated <canvas> stars, drawn on top of the baked
+     sky in "Bg-all 4-4.png". Same cream as the body text so the two star
+     populations read as one. JS reads this token off the canvas — the value
+     must live here, never in script.js. */
+  --color-star: #f5f5f0;
+
+  /* Reviews: each testimonial card is a cream card with dark ink text, even
+     though the section sits on the dark band (Figma 223:4108). Cards recede by
+     taking a progressively darker SOLID fill (exact Figma values per slot), not
+     by any transparency — slot 0 is the front, slot 4 the deepest. */
+  --color-review-card: #f5f5f0;                     /* slot 0 — front         */
+  --color-review-card-1: #f5f5f5;                   /* slot 1                 */
+  --color-review-card-2: #d4d4d4;                   /* slot 2                 */
+  --color-review-card-3: #b5b5b5;                   /* slot 3                 */
+  --color-review-card-4: #6b6b6b;                   /* slot 4 — deepest       */
+
+  /* Overlays that darken the hero photo so text stays legible. */
+  --color-overlay: rgba(13, 13, 13, 0.55);
+  --color-overlay-mid: rgba(13, 13, 13, 0.35);
+  --color-overlay-strong: rgba(13, 13, 13, 0.82);
+
+  /* ---- Font families --------------------------------------------------- */
+  --font-display: "PP Neue Montreal", Helvetica, Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "Courier New", monospace;
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* ---- Font sizes (exact Figma px) ------------------------------------- */
+  --font-size-wordmark: 200px;         /* hero "BRANDCO"                     */
+  --font-size-wordmark-studio: 160px;  /* hero "STUDIO"                      */
+  --font-size-headline: 80px;          /* About headline                     */
+  --font-size-stat: 120px;             /* stat numbers                       */
+  --font-size-stat-label: 24px;        /* stat label                         */
+  --font-size-service: 32px;           /* Services accordion service name    */
+  --font-size-case-name: 24px;         /* Cases card name + year             */
+  --font-size-logo: 24px;              /* header logo                        */
+  --font-size-body-sm: 16px;           /* accordion number + description     */
+  --font-size-tag: 14px;               /* service tag pill                   */
+  --font-size-nav: 16px;               /* header nav                         */
+  --font-size-label: 18px;             /* mono labels / ticker               */
+  --font-size-body: 18px;              /* mono body copy                     */
+  --font-size-button: 16px;            /* button text                        */
+
+  /* ---- Font weights ---------------------------------------------------- */
+  /* PP Neue Montreal (free) has real faces only for 600 and 800. 700 has no
+     file — anything set to --font-weight-bold falls back to the 800 face. */
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  /* ---- Line heights ---------------------------------------------------- */
+  --line-height-none: 1;       /* Figma "leading-none"                       */
+  --line-height-tight: 1.1;
+  --line-height-snug: 1.3;
+  --line-height-normal: 1.5;
+
+  /* ---- Letter spacing -------------------------------------------------- */
+  --tracking-wide: 0.02em;
+  --tracking-wordmark: 0.05em; /* Figma 10px @200px / 8px @160px             */
+
+  /* Wordmark double-outline (white body + dark keyline + white rim). Sized in
+     em so the two strokes follow the word size. */
+  --wordmark-rim-stroke: 0.03em;
+  --wordmark-keyline-stroke: 0.012em;
+
+  /* ---- Spacing (Figma px) ---------------------------------------------- */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-2xl: 32px;
+  --space-3xl: 64px;
+  --space-gutter: 80px;        /* page side padding                          */
+  --space-section-top: 160px;  /* section top padding                        */
+  --space-stat-x: 144px;       /* stats column gap                           */
+  --ticker-gap: 40px;          /* between ticker items AND dot ↔ text        */
+
+  /* ---- Radii ----------------------------------------------------------- */
+  --radius-none: 0;
+  --radius-pill: 50px;         /* nav container radius                       */
+
+  /* ---- Header (Figma 223:4023) ----------------------------------------- */
+  --header-height: 56px;
+  --header-offset: 32px;       /* header sits 32px from the top              */
+
+  /* Where the Cases filter row parks below the viewport top when a category
+     regroup has to pull the reader back up to it (see initCases). Clears the
+     fixed header — 32 offset + 56 height — with breathing room over it. */
+  --cases-pin-offset: 120px;
+
+  /* ---- Hero scene (Figma 223:3949 — the 1440 x 1114 photo block) -------- */
+  --hero-scene-width: 1440px;
+  --hero-scene-height: 1114px;
+  /* Moon disc centre on the Bg/Moon canvas — the spin pivots here. */
+  --moon-center-x: 51.2%;
+  --moon-center-y: 56.2%;
+
+  /* ---- About (Figma 223:4047) ------------------------------------------ */
+  --about-label-width: 187px;  /* "[ About us ]" column                      */
+  --about-desc-width: 951px;   /* two-column description group               */
+  --about-col-width: 405px;    /* one description column / hero mission      */
+  --about-stats-width: 952px;  /* 2 x 2 stats grid                           */
+
+  /* ---- Process (Figma 223:3999) ---------------------------------------- */
+  /* Right-hand steps (02/04) are a 405px block whose right edge lands at 1170
+     inside the 1280 field → inset 110px from the container's right edge. */
+  --process-step-inset: 110px;
+  /* 2nd headline line offset — Figma encodes it as 23 leading spaces; against
+     PP Neue Montreal Extrabold @80px that advance is ~338px (23 × 14.72). */
+  --process-headline-indent: 338px;
+
+  /* ---- Team (Figma 223:4097) ------------------------------------------- */
+  --team-grid-width: 952px;    /* 3 x 296 card + 2 x 32 gap                   */
+  --team-card-width: 296px;    /* card = photo width                          */
+  --team-photo-height: 320px;  /* portrait photo box                          */
+  /* Headline's 1st line offset — Figma encodes it as 8 leading spaces; against
+     PP Neue Montreal Extrabold @80px that advance is ~118px (8 × 14.72). */
+  --team-headline-indent: 118px;
+
+  /* ---- Reviews (Figma 223:4108) ---------------------------------------- */
+  /* 2nd headline line ("real growth //") offset — same leading-spaces trick as
+     Process; ~394px against PP Neue Montreal Extrabold @80px. */
+  --reviews-headline-indent: 394px;
+  --review-card-width: 760px;      /* Figma base card "Frame 127"            */
+  --review-card-height: 320px;
+  --review-card-pad: 32px;         /* inner padding of a card                */
+  --review-photo-width: 216px;     /* portrait on the right                   */
+  --review-photo-height: 256px;
+  /* Fixed stage that holds the fanned stack: card + up-left / up-right fan.   */
+  --review-stack-width: 900px;
+  --review-stack-height: 460px;
+  /* The 5 slot transforms that reproduce the exact Figma stack (223:4114):
+     offset in px from the front card's RESTING centre, plus a rotation, no
+     scale. script.js reads these straight into its SLOTS array (slot N's solid
+     fill is the matching --color-review-card* token above) instead of carrying
+     the numbers itself, which is what lets mobile hand the same code a
+     completely different fan from its own @media block. */
+  --review-slot-0-x: 0px;          /* #f5f5f0 — front                        */
+  --review-slot-0-y: 0px;
+  --review-slot-0-rot: 0deg;
+  --review-slot-1-x: 60px;         /* #f5f5f5                                 */
+  --review-slot-1-y: -40px;
+  --review-slot-1-rot: 10deg;
+  --review-slot-2-x: -34px;        /* #d4d4d4                                 */
+  --review-slot-2-y: -8px;
+  --review-slot-2-rot: -4deg;
+  --review-slot-3-x: 55px;         /* #b5b5b5                                 */
+  --review-slot-3-y: -35px;
+  --review-slot-3-rot: -2deg;
+  --review-slot-4-x: 0px;          /* #6b6b6b — deepest                      */
+  --review-slot-4-y: 22px;
+  --review-slot-4-rot: 2deg;
+  /* Reviews' offset inside .story-block--tail. Shared by the section and its
+     full-bleed divider, which lives on the wrapper so it can span the screen. */
+  --reviews-top: 2897px;           /* Figma y=9727 − tail origin 6830          */
+  --review-seg-active-width: 80px; /* wide progress bar (active position)     */
+  --review-arrow-size: 48px;       /* square nav button                       */
+  /* "View the case +" underline. It is drawn as a pseudo-element (so it can
+     animate), positioned to land where the old text-decoration underline sat:
+     the line box is 24px with the baseline 18px down, and Chrome put the
+     underline ~8px below the baseline (font metric + text-underline-offset 6px),
+     i.e. 2px past the box bottom for a 1px rule. */
+  --review-link-underline-bottom: -3px;
+
+  /* ---- Reviews motion (mirrors ANIM.REVIEW_* in script.js) --------------
+     The shuffle is driven by CSS transitions; script.js only swaps classes and
+     slot variables, and uses the same numbers to time the phases. Keep the two
+     in sync — the JS phase timers must match these durations. */
+  --review-lift-duration: 0.35s;   /* back card is pulled up out from behind   */
+  --review-settle-duration: 0.55s; /* …then comes straight down onto the front */
+  --review-shift-duration: 0.6s;   /* deck shifting back one slot             */
+  --review-deal-duration: 0.8s;    /* scroll-in deal, per card                */
+  /* Soft ease-outs: the long tail is what makes the landing feel natural. */
+  --ease-deal: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-lift: cubic-bezier(0.4, 0, 0.3, 1);
+  /* Lift pose — straight UP above the deck, no lateral drift and no tilt: the
+     card is pulled out from behind the stack, then descends onto the front. */
+  --review-lift-y: -260px;
+  --review-lift-scale: 1.02;
+  /* Card shadows. The base is the exact Figma drop-shadow every card carries;
+     the moving card gets a deeper one so it clearly reads as lifted OFF the
+     deck and landing on top of the front card. */
+  --shadow-review-card: 0 6px 10px rgba(42, 42, 42, 0.15);
+  --shadow-review-move: 0 26px 44px rgba(13, 13, 13, 0.5);
+  /* Deal-in start pose (flat pile, pushed down below its slot). */
+  --review-deal-y: 180px;
+  --review-deal-scale: 0.85;
+
+  /* ---- Footer (Figma 223:4137) ---------------------------------------- */
+  --font-size-footer-wordmark: 133px;   /* hollow "BRANDCO STUDIO®" accent     */
+  --footer-form-width: 406px;           /* subscribe form column (Frame 135)   */
+  --footer-col-width: 296px;            /* each bottom column (Menu/Follow/…)   */
+  --footer-col-gap: 196px;              /* gap between the 3 bottom columns     */
+  --footer-aside-width: 296px;          /* "Sign up…" blurb beside the form     */
+
+  /* Floating field labels. At rest the label is translated down onto the input's
+     own text line so it reads as a placeholder; focusing or filling the field
+     slides it back to translate(0,0) — its Figma spot above the rule. The Y is
+     the measured baseline delta (label baseline 18px, input text baseline 45px
+     inside the field); the X is the input's UA padding-left, so the two texts
+     start on the same pixel. Nothing leaves the flow, so field height is fixed. */
+  --footer-label-rest-x: 2px;
+  --footer-label-rest-y: 27px;
+  /* Dark "Discuss your project" button on the light band: light translucent hairline. */
+  --color-footer-btn-border: rgba(245, 245, 240, 0.24);
+
+  /* Footer starfield band. "Bg-all 4-4.png" is intrinsically 1440x3889 and CSS
+     forces exactly height:3889px, so image pixels map 1:1 onto slice-4 pixels.
+     Sampling row luminance down that slice: the light band holds ~217, decays
+     from image y=3160, and bottoms out at ~17 from image y=3400 on. Slice 4
+     starts at 1322px in .story-block--tail, so the sky is fully dark from
+     1322+3400 = 4722px, and the wrapper ends at 5211px. */
+  --footer-stars-top: 4722px;           /* tail-relative; sky is fully dark     */
+  --footer-stars-height: 489px;         /* 5211 - 4722, down to the wrapper end */
+  --footer-stars-fade: 120px;           /* top fade-in, blurs the exact edge    */
+
+  /* ---- Component sizes -------------------------------------------------- */
+  --dot-size: 12px;            /* ticker bullet                              */
+  --icon-size: 24px;           /* inline arrow / icon                        */
+  --stroke-bold: 2px;          /* wordmark + ® outline stroke                */
+
+  /* Viewfinder corner brackets on buttons. */
+  --bracket-arm: 6px;
+  --bracket-thickness: 2px;
+  --bracket-color: var(--color-text-primary);
+
+  /* ---- Buttons ---------------------------------------------------------- */
+  --cta-width: 191px;          /* header CTA (191 x 48)                      */
+  --cta-height: 48px;
+  /* Contour trace — a lit segment that sweeps the button outline ONCE on hover
+     (.btn--trace). Dash + gap are in SVG pathLength units and sum to 100 (one
+     lit segment on the perimeter). */
+  --cta-trace-color: var(--color-text-primary); /* cream, matches the outline */
+  --cta-trace-width: 2px;      /* thicker than the 1px border, so it reads as a moving light */
+  --cta-trace-dash: 24;        /* length of the lit segment (% of the perimeter) */
+  --cta-trace-gap: 76;         /* the unlit remainder — dash + gap = 100          */
+  --cta-trace-duration: 2.8s;  /* one calm lap of the outline (plays once)        */
+  --hero-cta-width: 296px;     /* hero CTA (296 x 64)                        */
+  --hero-cta-height: 64px;
+  --hero-cta-gap: 10px;        /* hero CTA text ↔ arrow                       */
+
+  /* ---- Effects ---------------------------------------------------------- */
+  --shadow-header: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --blur-header: 10px;
+  --border-width: 1px;
+
+  /* ---- Motion (mirrors ANIM in script.js; used for CSS transitions) ----- */
+  --duration-fast: 0.25s;
+  --duration-base: 0.4s;
+  --duration-thumb: 0.7s;                       /* Services image settling in */
+  /* The image waits out the panel's height tween (ANIM.PANEL_DURATION = 0.4s
+     in script.js) plus a beat, so it lands after the row is fully open. */
+  --delay-thumb: 0.45s;
+  --duration-zoom: 0.6s;                        /* Cases card image hover zoom */
+  --scale-case-hover: 1.05;                     /* how far that zoom goes    */
+  --duration-moon: 110s;                        /* one full moon rotation    */
+  /* Hero on-load reveal distance. Mirrors ANIM.Y_OFFSET in script.js, which
+     READS this token (see initHeroReveal) so the mobile block below can shorten
+     the travel without a second source of truth. */
+  --reveal-y: 40px;
+  --duration-ticker: 25s;                       /* one ticker marquee loop   */
+  --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);  /* ~power2.out               */
+}
+
+/* ============================================================================
+   MOBILE TOKENS — Figma frame "iPhone 11 Pro / X - 3" (434:1746, 375 x 13034)
+
+   Desktop above is UNTOUCHED. Only the tokens that genuinely DIFFER on mobile
+   are redefined here; everything absent from this block was measured in Figma
+   and found identical to desktop (mono labels 18px, stat 120px, stat label
+   24px, body-sm 16px, tag 14px, case name 24px, header height 56px, header
+   offset 32px).
+
+   Breakpoints for the whole project:
+     mobile   @media (max-width: 767px)                        ← this block
+     tablet   @media (min-width: 768px) and (max-width: 1439px)
+     desktop  no query — the base :root above, from 1440px up
+   ============================================================================ */
+@media (max-width: 767px) {
+  :root {
+    /* ---- Page --------------------------------------------------------- */
+    /* Content is 343px inside the 375 frame → 16px each side. Verified on
+       About, Services, Cases and Footer: every content frame is x=16 w=343. */
+    --space-gutter: 16px;
+
+    /* ---- Shared background band ---------------------------------------
+       "Bg-all_mobile 1.png" is 375 x 3284 with no padding. Like the desktop
+       slices it must keep its LITERAL height and only ever stretch
+       horizontally, so the height is a token, not a percentage. */
+    --bg-head-height: 3284px;       /* new — mobile only                    */
+    /* Our flow content runs a little taller than the art (inherited
+       line-heights), so a strip below it falls back to the wrapper colour.
+       Sampled off the art's own bottom rows — a flat mean of rgb(203) — so the
+       join reads as more of the same light band, not as a seam. */
+    --color-bg-head-end: #cbcbcb;   /* new — mobile only                    */
+
+    /* ---- Vertical rhythm ---------------------------------------------- */
+    /* Measured off the frame, consistent across sections: 80px above a
+       section's title, 40px below its last content block, 64px between the
+       title block and the content group. */
+    --space-section-top: 80px;      /* desktop 160px                        */
+    --space-section-bottom: 40px;   /* new — mobile only                    */
+    --space-title-gap: 64px;        /* new — title block ↔ content group    */
+    /* Figma 434:1832-1842 keep each Stat frame a FIXED 173px even after the
+       number shrank to 88px, so the block no longer equals 106 + 29 = 135 and
+       has to carry the height itself — that is what holds Gruop_Stats at its
+       drawn 788px (4 x 173 + 3 x 32). */
+    --stat-block-height: 173px;     /* new — mobile only                    */
+    /* About's two desc paragraphs stack on mobile; Figma's auto-layout gap
+       between them (434:1828) is a literal 33px, not the 32px used elsewhere. */
+    --about-desc-gap: 33px;         /* new — mobile only                     */
+
+    /* ---- Type scale ---------------------------------------------------- */
+    /* Every section headline drops to 48px (About, Services, Cases, Process,
+       Team, Review, Footer all measured at 48px Extrabold). */
+    --font-size-headline: 48px;     /* desktop 80px                         */
+    /* Stat numbers dropped on 2026-08-20 so "+64%" stops filling the whole
+       343px column: 88px puts the widest value at ~242px. leading-normal then
+       gives a 106px line box, down from 144. */
+    --font-size-stat: 88px;         /* desktop 120px                        */
+    --font-size-service: 24px;      /* desktop 32px — accordion service name */
+    --font-size-logo: 18px;         /* desktop 24px — header wordmark        */
+    --font-size-logo-reg: 24px;     /* new — the ® stays 24px beside it      */
+
+    /* ---- Burger (Figma 434:1753 / 434:1754) ---------------------------- */
+    /* 48x48 hit area, 12px padding, 32x32 icon box holding TWO bars of
+       24 x 2 at y=12 and y=18 — a two-line mark, not the usual three. */
+    --burger-size: 48px;
+    --burger-pad: 12px;
+    --burger-icon-size: 32px;
+    --burger-bar-width: 24px;
+    --burger-bar-height: 2px;
+    --burger-bar-inset: 4px;        /* bar x inside the 32px icon box       */
+    --burger-bar-top-1: 12px;
+    --burger-bar-top-2: 18px;
+    --burger-bar-color: var(--color-text-primary);   /* #f5f5f0 in Figma    */
+
+
+    /* ---- Hero / Main (Figma "Main" 442:2404 — 375 x 879) ---------------
+       Canvas coordinates below are the frame's own x minus 603 (the Main
+       frame starts at x=-603): photo 434:1748 at y=0 h=824, wordmark
+       442:2403 at y=160 h=140, mission+CTA 434:1778 at y=557 h=219,
+       ticker 434:1783 at y=824 h=55.
+       -------------------------------------------------------------------- */
+    --hero-scene-height: 824px;     /* desktop 1114px — the photo block      */
+    --hero-pad-top: 160px;          /* wordmark starts y=160                 */
+    --hero-pad-bottom: 48px;        /* 824 − 776 (bottom block ends y=776)   */
+
+    /* Wordmark. Figma fits BRANDCO to the full 343px content column, so the
+       sizes are odd numbers rather than a round scale: 63.755 / 343 =
+       0.185875 and 60.496 / 343 = 0.176373. Expressed against the live
+       column so a 360px phone shrinks instead of clipping, and CAPPED at the
+       Figma size so wider phones do not inflate the mark — the block is
+       width:fit-content there, which keeps STUDIO's right edge on BRANDCO's.
+       This is the one fluid thing in the project; desktop stays literal px. */
+    --font-size-wordmark: min(63.755px, calc((100vw - 2 * 16px) * 0.185875));
+    --font-size-wordmark-studio: min(60.496px, calc((100vw - 2 * 16px) * 0.176373));
+
+    /* Hero CTA — the Button component's "Size3" variant (434:1782). Padding,
+       gap, arrow and corner brackets are unchanged from desktop; the text
+       drops to --font-size-button (16px), which already exists. */
+    --hero-cta-width: 260px;        /* desktop 296px                         */
+    --hero-cta-height: 48px;        /* desktop 64px                          */
+
+    /* Moon crop. Figma's mobile photo is the RAW unsplash file re-cropped, so
+       its image transform cannot be mapped onto our pre-composited Bg.png /
+       Moon.png. The disc was measured instead: a circle fit to its limb in the
+       Figma render puts it at centre (172.2, 324.4), Ø 286 inside the 375x824
+       photo box. Moon.png's alpha bbox puts the same disc at 45.286% of the
+       canvas width, centred on --moon-center-x/y — so:
+         width = 285 / 0.45286 = 630px              = 168.4% of the scene
+         left  = 189.6 − 0.51237 × 631.5 = −134.0px = −35.72%
+         top   = 324.7 − 0.56193 × 488.6 =  ≈50px
+       2026-08-20: the designer nudged the disc 17px right (centre x 172.6 →
+       189.6); diameter and vertical centre are unchanged, so only `left` moved.
+       Width and left are percentages so the framing tracks a 360–430px phone.
+       The stage is then shorter than the 824px scene; that is fine — Bg.png's
+       edges sample at #0d0d0d or darker, so the join is invisible. */
+    --hero-stage-width: 168.4%;
+    --hero-stage-left: -35.72%;
+    --hero-stage-top: 50px;
+
+    /* ---- Services (Figma "Services" 434:1801 — 375 x 1340) -------------
+       Everything here was read off the mobile frame, not scaled from desktop.
+       Absent from this list because Figma measures them IDENTICAL to desktop:
+       the mono label (18px, 187px wide), the desc copy (16px mono), the tag
+       pill (14px, h32, px24, #cdcdcd), the dividers (1px #2a2a2a), the 32px
+       padding around each row, the 24px row -> desc gap and both toggle
+       border colours.
+       -------------------------------------------------------------------- */
+    /* Figma gives the section px-16 py-40, but ALSO leaves a 160px empty gap
+       between About (ends y=2663) and Services (y=2823). Our flow layout has
+       no such gap, so Services absorbs it: 40 + 160. That restores the drawn
+       240px from About's last stat to the [ SERVICES ] label AND puts the head
+       wrapper at 1784 + 1500 = 3284px — exactly the painted band of
+       bg-mobile-head.webp, so the art maps 1:1 instead of squeezing ~5%. */
+    --services-pad-top: 200px;             /* desktop 80px                    */
+
+    /* Headline 434:1806 is three hard paragraphs under whitespace-pre-wrap,
+       each carrying its indent as leading spaces; paragraphs 1 and 2 then wrap,
+       which is where the 5 drawn lines come from. Same 8.832px space advance
+       (0.184em @48px) the desktop indents are derived from: 9 and 16 spaces.
+       Applied as text-indent, NOT padding — paragraph 2 wraps and only its
+       FIRST line is indented ("BRAND" starts back at 0). */
+    --services-headline-indent-2: 79.5px;  /* "your Brand" — 9 leading spaces  */
+    --services-headline-indent-3: 141.3px; /* "grow //"    — 16 leading spaces */
+
+    /* Accordion row. Figma "Name" is items-START (the number and the dot stay
+       on line 1 of a name that wraps to two lines), so the two offsets below
+       centre them on that first 29px line exactly as drawn. */
+    --services-num-width: 39px;            /* "[01]" column — desktop 77px    */
+    --services-num-offset: 4px;            /* Figma pt-4 on the number box    */
+    --services-dot-offset: 8px;            /* dot y=8 inside its 12x20 box    */
+    --services-desc-indent: 63px;          /* Desc pl-63 = 39 + 24; desktop 109 */
+    /* Figma fixes the name box at 200px and lets the leftover 12px sit between
+       Name and the toggle. Without it our column is 212 and "VISUAL IDENTITY"
+       (203) stays on one line where Figma breaks it. */
+    --services-name-width: 200px;          /* new — mobile only               */
+
+    /* Toggle 32x32 (designer shrank it from 40 on 2026-08-21) around a 24px
+       icon box that did NOT change — so the mark stays 18 x 1.5 and the box
+       clearance goes 8px -> 4px on its own via the flex centring. The corner
+       brackets are NOT redefined either: Figma's angles still sit on the box
+       corner with the same ~2px overhang --bracket-inset already gives.
+       This token also sets the one-line row height: max(name 29, button) = 32. */
+    --services-toggle-size: 32px;          /* desktop 48px                    */
+    --services-bar-length: 18px;           /* desktop 24px                    */
+    --services-bar-thickness: 1.5px;       /* desktop 2px                     */
+
+    /* Tags wrap on mobile (item 03 has three) — Figma gap-[8px_16px]. */
+    --services-tag-row-gap: 8px;           /* new — mobile only               */
+
+    /* ---- Cases (Figma "Cases" 434:1845) --------------------------------- */
+    /* Headline 434:1850 is FIVE hard lines where desktop has two, each with
+       its indent baked in as leading spaces. Same 8.832px space advance
+       (0.184em @48px) the About/Services indents use: 9, 12 and 16 spaces.
+       Lines 2 and 4 ("brand is" / "results") start at 0 and need no token. */
+    --cases-headline-indent-1: 79.5px;     /* "When the" —  9 leading spaces  */
+    --cases-headline-indent-2: 106px;      /* "right"    — 12 leading spaces  */
+    --cases-headline-indent-3: 141.3px;    /* "follow"   — 16 leading spaces  */
+
+    /* Card geometry, re-synced 2026-08-21 (2nd revision) after the designer
+       reworked all seven Case instances onto one component. The card stays a
+       fixed 343 SQUARE and the IMAGE absorbs whatever the Name box leaves — but
+       the name shrank 24 -> 20px and its gap 24 -> 18px, which buys the image
+       11px (290 -> 301). Every card is now uniform: 434:1868, which had been the
+       odd 405-wide leftover through two revisions, is finally 343 too.
+
+       An earlier pass here made the image frame SQUARE (card 396) to stop the
+       landscape frame cutting the portrait photos. The designer answered that in
+       Figma instead, by re-cropping the photos to landscape, so the square is
+       reverted and the drawn 343 card is back. */
+    --cases-card-height: 343px;            /* new — mobile only               */
+    --cases-card-gap: 18px;                /* desktop 24px — image <-> name   */
+    /* Cases only. The shared --font-size-case-name is still NOT overridden:
+       .team__name reads it too, and Figma puts the two at DIFFERENT mobile
+       sizes (Cases 20, Team 18), so each keeps its own token. */
+    --cases-name-size: 20px;               /* desktop 24px                    */
+
+
+    /* ---- Process (Figma "Process" 434:1872 — 375 x 1399) ----------------
+       The mobile layout drops the desktop chequerboard entirely: all four
+       steps are one full-width 343px column, so --process-step-inset (110px)
+       is simply not used here and needs no override.                       */
+
+    /* The frame height. Slice 3 of the shared Bg-all IS the Process band, and
+       on mobile the section grows 1322 -> 1399, so the slice has to grow with
+       it or the last ~80px of step 04 (dark ink) falls onto slice 4's dark
+       art. Measured: both the desktop "Bg-all 3.png" and the designer's
+       "Bg-all_mobile 3.png" painted band are the SAME flat grainy light grey
+       (row luminance 211.5->216.9 vs 215.1->217.9, column sigma 3.6 vs 3.8),
+       so there is no structure for the horizontal squash to distort and the
+       mobile asset would buy nothing — stretching the desktop slice 5.8%
+       vertically is invisible on a flat grain.                             */
+    --process-height: 1399px;              /* new — mobile only               */
+
+    /* Headline 434:1876 is TWO Figma paragraphs that wrap to five lines in the
+       343 box (A / STRUCTURED / PATH / >TO YOUR / BRAND //). Only paragraph 2
+       is indented, by 9 leading spaces — the same 8.832px space advance
+       (0.184em @48px) every other section's indent uses. Applied as
+       text-indent, not padding: the paragraph wraps and only its FIRST line
+       carries the offset.                                                  */
+    --process-headline-indent: 79.5px;     /* desktop 338px                   */
+
+    /* Figma 434:1881 draws the step headings at 32px — the SAME size as
+       desktop. They cannot keep reading --font-size-service, which drops to
+       24px here for the Services names, so Process gets its own token (the
+       --cases-name-size pattern). At 32px in the 343 column our own font puts
+       BRAND AUDIT at 220.3 (Figma 219), IDENTITY & DESIGN at 306.3 and
+       LAUNCH & SUPPORT at 322.3 on one line each, and wraps only
+       STRATEGY & POSITIONING — exactly Figma's 72/104/72/72 Name heights.   */
+    --process-heading-size: 32px;          /* new — mobile only               */
+
+
+    /* ---- Team (Figma "Team" 434:1898 — 375 x 1837) ----------------------
+       Headline 434:1903 is FOUR Figma paragraphs under whitespace-pre-wrap;
+       paragraph 3 then wraps in the 343 box, which is where the five drawn
+       lines come from (A TEAM / THAT KNOWS / HOW TO / BUILD / BRANDS). Same
+       8.832px space advance (0.184em @48px) every other section's indents are
+       derived from: 8, 4 and 15 leading spaces. Paragraph 2 ("that knows")
+       starts at 0 and needs no token. Applied as text-indent, NOT padding —
+       paragraph 3 wraps and only its FIRST line carries the offset.
+       -------------------------------------------------------------------- */
+    --team-headline-indent-1: 70.7px;      /* "A team"       —  8 spaces      */
+    --team-headline-indent-3: 35.3px;      /* "how to build" —  4 spaces      */
+    --team-headline-indent-4: 132.5px;     /* "brands"       — 15 spaces      */
+
+    /* Card geometry. Figma 434:1904 nests three ROW frames 16px apart, each
+       holding two 164px cards 16px apart inside the 343 column — both axes are
+       16, so the grid takes a plain `gap: var(--space-lg)`. The row heights
+       differ (422 / 443 / 421) because each row hugs its own tallest card,
+       which a 2-column grid reproduces for free. --team-grid-width (952px) and
+       --team-card-width (296px) are NOT overridden: the columns become 1fr and
+       the media box goes to 100% instead. */
+    --team-photo-height: 186px;            /* desktop 320px                   */
+
+    /* Figma 434:1906 — the name drops to 18px Bold and WRAPS. Role and bio are
+       NOT overridden any more: the corrected frame draws them at 14px and 16px,
+       which is exactly what the shared --font-size-tag / --font-size-body-sm
+       already resolve to at this breakpoint, so .team__role and .team__bio need
+       no mobile rule at all. (They were 12px against Team's earlier 1655px
+       layout; the corrected frame is 1837px, and that growth is what moves
+       --reviews-top below.) */
+    --team-name-size: 18px;                /* desktop 24 (case-name)          */
+
+    /* ---- Reviews (Figma "Review" 434:1914 — 375 x 1241) -----------------
+       A different CARD, not a scaled desktop one: Figma drops the portrait and
+       stands the card up, so the fan is re-measured from the mobile frame
+       rather than divided down. --review-card-pad (32px), --review-photo-*
+       (the photo is display:none here), --review-seg-active-width (80px),
+       --review-arrow-size (48px) and --review-link-underline-bottom are NOT
+       overridden — Figma measures every one of them identical to desktop.
+       -------------------------------------------------------------------- */
+    --review-card-width: 320px;            /* desktop 760px                   */
+    --review-card-height: 400px;           /* desktop 320px                   */
+
+    /* Stage = the bounding box of Figma's "Group 5" (434:1922), 365.45 x 506.78
+       INCLUDING the rotated corners. The height keeps the deepest card's
+       overhang, because Figma measures the 64px gap down to the arrow row from
+       that bounding box and NOT from the front card. 365 is 22px wider than the
+       343 column, so the stack overhangs 11px each side — .story-block's
+       overflow-x: clip near the top of this breakpoint is what keeps that off
+       the horizontal scroll. */
+    --review-stack-width: 365px;           /* desktop 900px                   */
+    --review-stack-height: 507px;          /* desktop 460px                   */
+
+    /* The fan, measured off Group 5 (434:1922): each card's bounding-box centre
+       minus the stage's resting centre (182.5, 307). Rotation is about the
+       centre, so a bbox centre is rotation-invariant and these survive the tilts
+       exactly. The tilts themselves come straight off Figma and match desktop
+       everywhere except slot 1 (3deg where desktop has 10deg).
+
+       Two things here look like mistakes and are not. Slot 0 is not (0, 0): the
+       front card sits ~10px RIGHT of the stage centre and 20px above its floor,
+       because both the left edge and the floor of the bounding box belong to
+       other cards' overhang. And the offsets are a third to a fifth of the
+       desktop ones — the deck is 320px wide here, so desktop's +60/+55 spread
+       would push slots 1 and 3 clean off the screen. */
+    --review-slot-0-x: 10.3px;             /* #f5f5f0 — front  (desktop   0) */
+    --review-slot-0-y: -20px;              /*                   (desktop   0) */
+    --review-slot-0-rot: 0deg;             /*                   (desktop   0) */
+    --review-slot-1-x: 12.7px;             /* #f5f5f5           (desktop  60) */
+    --review-slot-1-y: -98.9px;            /*                   (desktop -40) */
+    --review-slot-1-rot: 3deg;             /*                   (desktop  10) */
+    --review-slot-2-x: 5.7px;              /* #d4d4d4           (desktop -34) */
+    --review-slot-2-y: -43.3px;            /*                   (desktop  -8) */
+    --review-slot-2-rot: -4deg;            /*                   (desktop  -4) */
+    --review-slot-3-x: -15.6px;            /* #b5b5b5           (desktop  55) */
+    --review-slot-3-y: -62.5px;            /*                   (desktop -35) */
+    --review-slot-3-rot: -2deg;            /*                   (desktop  -2) */
+    --review-slot-4-x: -11.7px;            /* #6b6b6b — deepest (desktop   0) */
+    --review-slot-4-y: -5.7px;             /*                   (desktop  22) */
+    --review-slot-4-rot: 2deg;             /*                   (desktop   2) */
+
+    /* Same two moves, shorter travel. Durations, easings and scales are NOT
+       touched — only the distances, which were tuned against a 320px-tall card
+       on a 900px stage. -260px would throw the lifting card clean off the top
+       of a 507px stage and over the headline; -160 is the same 0.4 of the card
+       height that desktop's -260 was. The deal-in start pose drops by the same
+       ratio already used for --reveal-y (40 -> 24). */
+    --review-lift-y: -160px;               /* desktop -260px                  */
+    --review-deal-y: 100px;                /* desktop  180px                  */
+
+    /* Reviews' top inside .story-block--tail. Team is far taller on mobile and
+       starts 77px lower (Process grew slice 3), so Reviews moves down with it;
+       this token carries the .story-block--tail::after divider along for free.
+       The value is Team's MEASURED bottom (1399 + 1853), not Figma's 1399 +
+       1837 — our PP Neue Montreal Extrabold stands in for Figma's Bold, so one
+       name wraps to a second line and Team runs 16px long (0.9%). Re-measure
+       this whenever Team's frame changes: it grew 182px when Figma corrected the
+       card role to 14px, the bio to 16px and the grid row gap to 16px. */
+    --reviews-top: 3252px;                 /* desktop 2897px                  */
+
+
+    /* ---- Footer (Figma "Footer" 434:1945 — 375 x 1136) ------------------
+       A different STRUCTURE, not a scaled desktop: the "Sign up..." blurb
+       leaves the right-hand column and drops UNDER the headline, the form goes
+       full width and left-aligned, the three link columns become a 2 x 2 grid
+       with Contacts on its own row, and the giant hollow wordmark falls
+       133 -> 34px so it sits almost flush with the divider.
+
+       Absent from this list because Figma measures them IDENTICAL to desktop:
+       the form's field pitch (Inputs at y 0/56/112 in BOTH frames, so
+       --space-lg still holds), the button's 32px margin, the mono column
+       labels (18px #8f8f8f), the links (16px), the 24px label <-> list and
+       16px link <-> link gaps, the 14px legal type and the #2a2a2a divider.
+       --footer-form-width and --footer-aside-width need no override either —
+       both blocks simply go width:100%.
+       -------------------------------------------------------------------- */
+
+    /* The footer's top inside .story-block--tail. A token (like --reviews-top
+       above) because TWO things read it: the section itself and the
+       .story-block--tail::before that paints the footer's band. */
+    --footer-top: 4306px;                  /* = --reviews-top + Reviews 1054  */
+
+    /* The footer's own MEASURED height (1207.1, rounded up). Needed because the
+       tail wrapper is sized by its in-flow slices, not by its absolute
+       sections: slice 4 has to stay 4331 tall to keep Reviews off the light
+       part of "Bg-all 4-4.png", and 1399 + 4331 = 5730 runs 217px past the
+       footer's bottom — an empty dark strip under "Privacy policy" at the end
+       of the page. --footer-top + this is where the wrapper is cut instead.
+       Re-measure it whenever the footer's content changes; the two places that
+       read it are .story-block--tail's height and --footer-stars-height. */
+    --footer-height: 1208px;               /* new — MEASURED, mobile only     */
+
+    /* Figma 434:1967 / 434:1974 sit at x 0 and 150 inside the 343 column, so
+       the first column is 118 and the gutter 32. The second column is given
+       the rest rather than Figma's literal 117 — the content is left-aligned
+       and far shorter, so it reads the same and nothing can clip. */
+    --footer-col-width: 118px;             /* desktop 296px                   */
+    --footer-col-gap: 32px;                /* desktop 196px                   */
+
+    /* Two 40px joints in the frame, both between a finished group and the next
+       one: Call ends 605 -> Group 11 starts 645, and the link grid ends 961 ->
+       the Logo frame starts 1001. */
+    --footer-group-gap: 40px;              /* new — mobile only               */
+
+    /* Figma 434:1987 — 34px, and its clip frame (434:1986) is only 23px tall,
+       so the divider cuts the caps at 17 of their ~24px. --footer-wordmark-
+       offset replaces the desktop 43.5px: it drops the line box until the cap
+       top lands 6px inside the clip, exactly as the frame draws it. */
+    /* Capped at Figma's 34px and expressed against the live column below that,
+       so a 360px phone shrinks the mark instead of clipping it: at 34px the
+       wordmark plus its ® measures 334.6 of the 343 column (0.9754), and
+       0.9754 x 34 / 343 = 0.09913 per column pixel. Same pattern, and the same
+       reason, as --font-size-wordmark on the hero — 328px of column at 360
+       would otherwise take 7px off the right of the ® circle, which reads as a
+       clipping bug rather than as the deliberate cut across the letters. */
+    --font-size-footer-wordmark:
+      min(34px, calc((100vw - 2 * var(--space-gutter)) * 0.09913));  /* desktop 133px */
+    --footer-wordmark-clip-height: 23px;   /* new — mobile only               */
+    --footer-wordmark-offset: 2px;         /* new — MEASURED, see styles.css  */
+
+    /* ® badge (434:1988): a 24px circle holding a 14px "R", 3px after the
+       wordmark — against desktop's 64px circle / 48px R / 5px. Expressed in em
+       of the badge's own font-size, like .hero__reg, so it tracks the wordmark. */
+    --footer-reg-size: 0.412em;            /* R = 14 of the 34px wordmark     */
+    --footer-reg-badge: 1.714em;           /* circle = 24 of the 14px R       */
+    --footer-reg-lift: 0.573em;            /* new — MEASURED, cap-aligns it   */
+    --footer-reg-gap: 3px;                 /* Figma x 311 − text 308          */
+
+    /* Headline 434:1952. Figma writes one 48px paragraph whose brackets are
+       INLINE with the words and whose indents are literal leading spaces —
+       "[<7sp>Your" / "starting" / "<18sp>point ]". Our markup has the brackets
+       as their own spans, so the spaces become a margin and a padding instead:
+       --footer-bracket-gap opens the "[" -> "YOUR" gap, and
+       --footer-title-close-gap holds "POINT" clear of the "]" parked at the
+       right edge. Both MEASURED off the render, not counting spaces. */
+    --footer-bracket-gap: 47px;            /* new — MEASURED                  */
+    --footer-title-close-gap: 26px;        /* new — MEASURED                  */
+
+    /* ---- Footer band art -------------------------------------------------
+       "bg-mobile-tail.webp" (375 x 4208, converted from the designer's own
+       "Bg-all_mobile 4.png" the way bg-mobile-head.webp was: identical pixels,
+       53 KB instead of 935). Its light band opens on a HARD edge at exactly
+       row 3072 — row 3071 reads 83, row 3072 reads 217 — and that edge IS the
+       footer's top, so the art is pulled up by exactly that much.
+
+       2026-08-25: the designer RE-EXPORTED this art mid-pass, 4032 -> 4208
+       rows, and the re-export is the old band stretched 1.485x below the edge
+       (correlated against the previous webp down the right gutter, rms 4.8).
+       That is almost exactly the 1.384x this file used to have to apply in CSS
+       to reproduce the Figma render — i.e. the stretch is now baked into the
+       asset, and the scale below is down from 1.5375 to roughly 1:1.
+
+       What --footer-bg-art-scale still carries is our own overrun: Figma lands
+       the fade's 50% point (688 rows past the edge in the new art) on the link
+       columns' first row, and our columns start at 710 rather than the frame's
+       645, because real <input>s stand in for Figma's 24px stubs. 710 / 688 =
+       1.032. Re-derive it the same way if the footer's rendered height moves:
+       measure both images down the 16px RIGHT GUTTER, the one strip with no
+       glyphs in it, and match the 50% point — absolute levels do not compare
+       across a Figma render and the file, but shoulder positions do.
+
+       The art then reaches 1180px into a 1207px footer, so a last sliver of it
+       and everything past the footer show the colour below — the art's own
+       floor, a flat rgb(20,20,20) with no texture left in it, so the join is
+       invisible. Same trick, same reason, as --color-bg-head-end. */
+    --footer-bg-art-height: 4208px;        /* new — the file's own height     */
+    --footer-bg-art-top: 3072px;           /* new — the hard light edge       */
+    --footer-bg-art-scale: 1.032;          /* new — our 710 over Figma's 688  */
+    --color-footer-bg-end: #141414;        /* new — mobile only               */
+
+    /* Starfield. The desktop values are tied to the desktop band and land on
+       the LIGHT half here, then stop 300px short of the bottom. Re-derived off
+       the mobile art at the scale above: the fade bottoms out 815 rows past
+       the edge, which the scale puts 841px into the footer — the same place
+       desktop starts its field, where the sky is fully dark. 4306 + 841 =
+       5147, and the field runs to the wrapper's cut end, --footer-top +
+       --footer-height = 5514. */
+    --footer-stars-top: 5147px;            /* desktop 4722px                  */
+    --footer-stars-height: 367px;          /* desktop 489px                   */
+
+
+    /* ---- Motion --------------------------------------------------------- */
+    /* Same fade + translateY, shorter travel: 40px reads large against a 63px
+       wordmark when it was tuned for a 200px one. */
+    --reveal-y: 24px;               /* desktop 40px                          */
+  }
+}
